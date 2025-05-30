@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Result - Study Hub</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/loading.css">
+    <style>
+        .container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f6f9fc 0%, #ecf0f5 100%);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .student-info {
+            margin: 20px 0;
+            text-align: center;
+            color: #4a5568;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        .selection-form {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            color: #2d3748;
+            background-color: #f8fafc;
+            transition: border-color 0.3s;
+        }
+
+        .form-group select:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-view {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+            width: 100%;
+            justify-content: center;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            margin-top: 20px;
+        }
+
+        .btn-view:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-back {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: #718096;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0;
+        }
+
+        .btn-back:hover {
+            background: #4a5568;
+        }
+
+        .results-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .results-header h2 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .results-table th {
+            background-color: #f7fafc;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .results-table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-content {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3182ce;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <button onclick="window.location.href='/student/dashboard'" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </button>
+
+        <div class="header">
+            <h1>Check Your Results</h1>
+            <div class="student-info">
+                <h2 id="studentName"></h2>
+                <p id="studentId"></p>
+            </div>
+        </div>
+
+        <div class="content">
+            <div id="selectionForm" class="selection-form">
+                <h2>Check Your Results</h2>
+                <div class="form-group">
+                    <label for="year">Academic Year</label>
+                    <select id="year" required>
+                        <option value="">Select Year</option>
+                        <option value="1">Year 1</option>
+                        <option value="2">Year 2</option>
+                        <option value="3">Year 3</option>
+                        <option value="4">Year 4</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="semester">Semester</label>
+                    <select id="semester" required>
+                        <option value="">Select Semester</option>
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                    </select>
+                </div>
+
+                <button onclick="viewResults()" class="btn btn-view">
+                    <i class="fas fa-search"></i> View Results
+                </button>
+            </div>
+
+            <div id="resultsContainer" class="results-container" style="display: none;">
+                <button onclick="showSelectionForm()" class="btn btn-back">
+                    <i class="fas fa-arrow-left"></i> Back to Selection
+                </button>
+                <div class="results-header">
+                    <h2>Academic Results</h2>
+                    <p id="resultYearSemester"></p>
+                </div>
+                <div class="student-info">
+                    <h3 id="resultStudentName"></h3>
+                    <p id="resultStudentId"></p>
+                </div>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Marks</th>
+                            <th>Grade</th>
+                            <th>Credits</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <p>Loading your results...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to show loading overlay
+        function showLoading() {
+            const overlay = document.createElement('div');
+            overlay.className = 'loading-overlay';
+            overlay.innerHTML = `
+                <div class="loading-content">
+                    <div class="spinner"></div>
+                    <p>Loading results...</p>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        // Function to hide loading overlay
+        function hideLoading() {
+            const overlay = document.querySelector('.loading-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+
+        // Function to show selection form
+        function showSelectionForm() {
+            document.getElementById('selectionForm').style.display = 'block';
+            document.getElementById('resultsContainer').style.display = 'none';
+        }
+
+        // Function to view results
+        async function viewResults() {
+            const year = document.getElementById('year').value;
+            const semester = document.getElementById('semester').value;
+
+            if (!year || !semester) {
+                alert('Please select both year and semester');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch(`/api/student/results?year=${year}&semester=${semester}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('studentToken')}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Update student info
+                    document.getElementById('resultStudentName').textContent = data.student_info.name;
+                    document.getElementById('resultStudentId').textContent = `ID: ${data.student_info.id}`;
+                    document.getElementById('resultYearSemester').textContent = `Year ${year} - Semester ${semester}`;
+
+                    // Update results table
+                    const tableBody = document.getElementById('resultsTableBody');
+                    tableBody.innerHTML = '';
+
+                    if (data.results.length === 0) {
+                        const row = document.createElement('tr');
+                        row.innerHTML = '<td colspan="4" style="text-align: center;">No results found for this semester</td>';
+                        tableBody.appendChild(row);
+                    } else {
+                        data.results.forEach(result => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${result.subject}</td>
+                                <td>${result.marks}</td>
+                                <td>${result.grade}</td>
+                                <td>${result.credits}</td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    }
+
+                    // Show results container
+                    document.getElementById('selectionForm').style.display = 'none';
+                    document.getElementById('resultsContainer').style.display = 'block';
+                } else {
+                    alert(data.message || 'Failed to fetch results');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while fetching results');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Load student info when page loads
+        async function loadStudentInfo() {
+            try {
+                const response = await fetch('/api/student/info', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('studentToken')}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('studentName').textContent = data.student_info.name;
+                    document.getElementById('studentId').textContent = `ID: ${data.student_info.id}`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Call loadStudentInfo when page loads
+        document.addEventListener('DOMContentLoaded', loadStudentInfo);
+    </script>
+</body>
+</html> 

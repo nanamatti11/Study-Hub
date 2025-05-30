@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Hub</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/login.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="hero-section">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <h1>STUDY HUB</h1>
+            </div>
+            <p class="welcome-text">
+                Welcome to our School Result Portal! This platform provides easy access to academic results 
+                for both students and instructors. Students can view their grades and track their progress, 
+                while instructors can manage and update results efficiently.
+            </p>
+            
+            <div class="features">
+                <div class="feature">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Track Progress</h3>
+                    <p>Monitor your academic performance</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-book"></i>
+                    <h3>Access Resources</h3>
+                    <p>Find study materials and guides</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3>Stay Updated</h3>
+                    <p>Never miss important deadlines</p>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <button id="studentBtn" class="btn btn-student">
+                    <i class="fas fa-user-graduate"></i> Student Login
+                </button>
+                <button id="instructorBtn" class="btn btn-instructor">
+                    <i class="fas fa-chalkboard-teacher"></i> Instructor Login
+                </button>
+            </div>
+
+            <div class="register-section">
+                <p>Don't have an account?</p>
+                <button onclick="window.location.href='/register'" id="registerBtn" class="btn btn-register">
+                    <i class="fas fa-user-plus"></i> Register Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Login Form -->
+    <div id="studentLoginForm" class="login-form" style="display: none;">
+        <div class="error-message" id="studentLoginError" style="display: none;">
+            <i class="fas fa-exclamation-circle"></i>
+            Incorrect username or password. Please try again.
+        </div>
+        <form id="studentForm">
+            <div class="form-group">
+                <label for="studentUsername">
+                    <i class="fas fa-user"></i> Username
+                </label>
+                <input type="text" id="studentUsername" name="username" required>
+            </div>
+            <div class="form-group password-group">
+                <label for="studentPassword">
+                    <i class="fas fa-lock"></i> Password
+                </label>
+                <div class="password-input-container">
+                    <input type="password" id="studentPassword" name="password" required>
+                    <i class="fas fa-eye password-toggle" id="studentPasswordToggle"></i>
+                </div>
+            </div>
+            <div class="forgot-password">
+                <a href="/student/forgot-password">
+                    <i class="fas fa-key"></i> Forgot Password?
+                </a>
+            </div>
+            <button type="submit" class="btn btn-student">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+        </form>
+    </div>
+
+    <!-- Instructor Login Form -->
+    <div id="instructorLoginForm" class="login-form" style="display: none;">
+        <div class="error-message" id="instructorLoginError" style="display: none;">
+            <i class="fas fa-exclamation-circle"></i>
+            Incorrect username or password. Please try again.
+        </div>
+        <form id="instructorForm">
+            <div class="form-group">
+                <label for="instructorUsername">
+                    <i class="fas fa-user"></i> Instructor Username
+                </label>
+                <input type="text" id="instructorUsername" name="username" required>
+            </div>
+            <div class="form-group password-group">
+                <label for="instructorPassword">
+                    <i class="fas fa-lock"></i> Password
+                </label>
+                <div class="password-input-container">
+                    <input type="password" id="instructorPassword" name="password" required>
+                    <i class="fas fa-eye password-toggle" id="instructorPasswordToggle"></i>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-instructor">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+        </form>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>About Study Hub</h4>
+                <p>Empowering students and instructors with a comprehensive academic management platform.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="#"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="#"><i class="fas fa-info-circle"></i> About</a></li>
+                    <li><a href="#"><i class="fas fa-envelope"></i> Contact</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Study Hub. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
