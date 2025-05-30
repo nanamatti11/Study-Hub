@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Study Hub</title>
+    <link rel="stylesheet" href="/static/css/register.css">
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <h2>Register</h2>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <form method="POST" action="{{ url_for('register') }}">
+                <div class="form-group">
+                    <label for="fullname">Full Name</label>
+                    <input type="text" id="fullname" name="fullname" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="user_type">Register as</label>
+                    <select id="user_type" name="user_type" required onchange="toggleSubjectField()">
+                        <option value="">Select user type</option>
+                        <option value="student">Student</option>
+                        <option value="teacher">Instructor</option>
+                    </select>
+                </div>
+                <div class="form-group" id="subject-group" style="display: none;">
+                    <label for="subject">Subject</label>
+                    <input type="text" id="subject" name="subject">
+                </div>
+                <button type="submit">Register</button>
+            </form>
+            <p>Already have an account? <a href="{{ url_for('index') }}">Login here</a></p>
+        </div>
+    </div>
+
+    <script>
+        function toggleSubjectField() {
+            const userType = document.getElementById('user_type').value;
+            const subjectGroup = document.getElementById('subject-group');
+            const subjectInput = document.getElementById('subject');
+            
+            if (userType === 'teacher') {
+                subjectGroup.style.display = 'block';
+                subjectInput.required = true;
+            } else {
+                subjectGroup.style.display = 'none';
+                subjectInput.required = false;
+            }
+        }
+    </script>
+</body>
+</html> 

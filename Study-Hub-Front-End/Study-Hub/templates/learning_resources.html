@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Resources - Study Hub</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <style>
+        .container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f6f9fc 0%, #ecf0f5 100%);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .info-card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .page-title {
+            color: #2d3748;
+            font-size: 2em;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .info-message {
+            color: #4a5568;
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            padding: 0 20px;
+        }
+
+        .info-content {
+            text-align: center;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-title {
+            color: #2d3748;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .info-description {
+            color: #718096;
+            margin-bottom: 15px;
+        }
+
+        .resource-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #4299e1;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .resource-link:hover {
+            color: #3182ce;
+        }
+
+        .resource-link i {
+            font-size: 0.9em;
+        }
+
+        .btn-back {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: #718096;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        .btn-back:hover {
+            background: #4a5568;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <button onclick="window.location.href='/student/dashboard'" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </button>
+
+        <div class="content">
+            <div class="info-card">
+                <h1 class="page-title">Learning Resources</h1>
+                <p class="info-message">
+                    Access your study materials and educational resources to enhance your learning journey! 📚
+                </p>
+
+                <div class="info-content">
+                    <div class="info-item">
+                        <div class="info-title">Mathematics Resources</div>
+                        <div class="info-description">
+                            Access comprehensive mathematics study materials, practice problems, and video tutorials.
+                        </div>
+                        <a href="#" class="resource-link">
+                            <i class="fas fa-book"></i> View Resources
+                        </a>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-item">
+                            <div class="info-title">Science Student resources</div>
+                            <div class="info-description">
+                                Access comprehensive Science learning materials study materials, practice problems, and video tutorials.
+                            </div>
+                            <a href="#" class="resource-link">
+                                <i class="fas fa-book"></i> View Resources
+                            </a>
+                        </div>
+
+                    <div class="info-item">
+                        <div class="info-title">Physics Laboratory Guide</div>
+                        <div class="info-description">
+                            Download laboratory manuals, safety guidelines, and experiment procedures.
+                        </div>
+                        <a href="#" class="resource-link">
+                            <i class="fas fa-flask"></i> Access Guide
+                        </a>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-title">Programming Tutorials</div>
+                        <div class="info-description">
+                            Find coding examples, project templates, and programming best practices.
+                        </div>
+                        <a href="/student/coding-resources" class="resource-link">
+                            <i class="fas fa-laptop-code"></i> Start Learning
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
