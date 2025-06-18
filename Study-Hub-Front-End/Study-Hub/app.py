@@ -15,6 +15,8 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import re
 import requests
+from urllib.parse import urlparse, parse_qs
+from werkzeug.utils import secure_filename
 
 import os
 import io
@@ -25,6 +27,9 @@ from google.oauth2.credentials import Credentials # type: ignore
 from google_auth_oauthlib.flow import InstalledAppFlow # type: ignore
 from googleapiclient.discovery import build # type: ignore
 from googleapiclient.http import MediaIoBaseDownload # type: ignore
+import gdown
+
+# Replace with your actual file ID from the URL
 
 # Configure logging for debugging and error tracking
 logging.basicConfig(level=logging.DEBUG)
@@ -37,6 +42,8 @@ app.config['SECRET_KEY'] = 'your-secret-key-here'  # Replace with a secure key i
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///study_hub.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = app.config['SECRET_KEY']  # Use the same key for JWT
+app.config['RESOURCES_FOLDER'] = os.path.join(app.static_folder, 'resources')
+app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'doc', 'docx', 'txt'}
 
 # Initialize SQLAlchemy with the app for database operations
 db = SQLAlchemy()
@@ -88,6 +95,19 @@ def token_required(f):
 def index():
     return render_template('index.html')
 
+
+
+def download_fileresources():
+    try:
+        file_id = "17-onD-fMI7gKBQjtN8i1y2Skl_EqgDCN"
+        url = f"https://drive.google.com/uc?id={file_id}"
+        output_file = "downloaded_file.ext"
+
+        gdown.download(url, output_file, quiet=False)
+        print("Download completed.")
+    except Exception as e:
+        print(f"Download failed: {e}")
+
 # Database model for User
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -100,6 +120,7 @@ class User(db.Model):
 
     def __repr__(self):
         return f'<User {self.email}>'
+
 
 # Helper function to validate email format
 def validate_email(email):
@@ -232,27 +253,23 @@ def learning_resources():
 @app.route('/student/coding-resources')
 def coding_resources():
     try:
-        # Get the token from cookie or Authorization header
-        token = request.cookies.get('studentToken')
+        # Get token from cookie or Authorization header
+        token = request.cookies.get('studentToken') or request.headers.get('Authorization', '').replace('Bearer ', '')
         if not token:
-            token = request.headers.get('Authorization')
-            if token and token.startswith('Bearer '):
-                token = token.split(' ')[1]
+            return redirect(url_for('index'))
         
-        if not token:
-            return redirect('/')
-            
-        # Verify the token
-        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        # Verify token
+        try:
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            if payload.get('type') != 'student':
+                return redirect(url_for('index'))
+        except jwt.InvalidTokenError:
+            return redirect(url_for('index'))
         
-        # Verify it's a student token
-        if data.get('type') != 'student':
-            return redirect('/')
-            
         return render_template('coding_resources.html')
     except Exception as e:
-        logger.error(f"Error accessing coding resources: {str(e)}")
-        return redirect('/')
+        logger.error(f"Error in coding_resources route: {str(e)}")
+        return redirect(url_for('index'))
 
 # API endpoint for student login
 @app.route('/api/student/login', methods=['POST'])
@@ -888,71 +905,168 @@ def delete_result(result_id):
 
 # API endpoint for downloading coding resources
 @app.route('/api/coding-resources/<resource_type>')
-def get_coding_resource(resource_type):
+def download_resource(resource_type):
     try:
-        # Get token from headers or cookies
-        token = request.headers.get('Authorization')
-        if token and token.startswith('Bearer '):
-            token = token.split(' ')[1]
-        else:
-            token = request.cookies.get('studentToken')
-
+        # Get token from cookie or Authorization header
+        token = request.cookies.get('studentToken') or request.headers.get('Authorization', '').replace('Bearer ', '')
         if not token:
-            return jsonify({'success': False, 'message': 'Token is missing'}), 401
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        # Verify token
+        try:
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            if payload.get('type') != 'student':
+                return jsonify({'error': 'Unauthorized'}), 403
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid token'}), 401
 
-        # Decode token to get student info
-        data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
-        if data.get('type') != 'student':
-            return jsonify({'success': False, 'message': 'Invalid token type'}), 401
-
-        # Map resource types to their corresponding PDF files
-        resource_map = {
-            'python': 'python_programming_guide.pdf',
-            'javascript': 'javascript_basics.pdf',
-            'data-structures': 'data_structures_algorithms.pdf'
+        # Map resource types to their Google Drive URLs
+        resource_urls = {
+            'python': 'https://drive.google.com/file/d/17-onD-fMI7gKBQjtN8i1y2Skl_EqgDCN/view',
+            'javascript': 'https://drive.google.com/file/d/17-onD-fMI7gKBQjtN8i1y2Skl_EqgDCN/view',
+            'data-structures': 'https://drive.google.com/file/d/17-onD-fMI7gKBQjtN8i1y2Skl_EqgDCN/view'
         }
 
-        if resource_type not in resource_map:
-            return jsonify({'success': False, 'message': 'Invalid resource type'}), 400
+        if resource_type not in resource_urls:
+            return jsonify({'error': 'Invalid resource type'}), 400
 
-        # Get the PDF file path
-        pdf_path = os.path.join(app.root_path, 'static', 'resources', resource_map[resource_type])
+        # Get the Google Drive URL
+        drive_url = resource_urls[resource_type]
         
-        if not os.path.exists(pdf_path):
-            # If file doesn't exist, fetch from external API
-            try:
-                # Example API endpoint (replace with actual API)
-                api_url = f"https://api.coding-resources.com/{resource_type}/pdf"
-                response = requests.get(api_url)
-                
-                if response.status_code == 200:
-                    # Create resources directory if it doesn't exist
-                    os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
-                    
-                    # Save the PDF file
-                    with open(pdf_path, 'wb') as f:
-                        f.write(response.content)
-                else:
-                    return jsonify({'success': False, 'message': 'Failed to fetch resource'}), 500
-            except Exception as e:
-                logger.error(f"Error fetching resource from API: {str(e)}")
-                return jsonify({'success': False, 'message': 'Failed to fetch resource'}), 500
+        # Extract file ID from Google Drive URL
+        file_id = get_google_drive_file_id(drive_url)
+        if not file_id:
+            return jsonify({'error': 'Invalid Google Drive URL'}), 400
 
-        # Send the PDF file
+        # Create resources directory if it doesn't exist
+        os.makedirs(app.config['RESOURCES_FOLDER'], exist_ok=True)
+
+        # Generate a secure filename
+        filename = secure_filename(f"{resource_type}_guide.pdf")
+        file_path = os.path.join(app.config['RESOURCES_FOLDER'], filename)
+
+        # Download the file if it doesn't exist locally
+        if not os.path.exists(file_path):
+            try:
+                # Use gdown for downloading from Google Drive
+                url = f"https://drive.google.com/uc?id={file_id}"
+                gdown.download(url, file_path, quiet=False)
+            except Exception as e:
+                logger.error(f"Error downloading file: {str(e)}")
+                return jsonify({'error': 'Failed to download resource'}), 500
+
+        # Check if file exists and is allowed
+        if not os.path.exists(file_path) or not allowed_file(filename):
+            return jsonify({'error': 'Resource not found'}), 404
+
+        # Send the file
         return send_file(
-            pdf_path,
+            file_path,
             as_attachment=True,
-            download_name=resource_map[resource_type],
+            download_name=filename,
             mimetype='application/pdf'
         )
 
-    except jwt.ExpiredSignatureError:
-        return jsonify({'success': False, 'message': 'Token has expired'}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({'success': False, 'message': 'Invalid token'}), 401
     except Exception as e:
-        logger.error(f"Error getting coding resource: {str(e)}")
-        return jsonify({'success': False, 'message': 'An error occurred while fetching the resource'}), 500
+        logger.error(f"Error in download_resource: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+# Add these helper functions
+def is_valid_google_drive_url(url):
+    """Check if the URL is a valid Google Drive URL."""
+    parsed = urlparse(url)
+    return 'drive.google.com' in parsed.netloc
+
+def get_google_drive_file_id(url):
+    """Extract file ID from Google Drive URL."""
+    parsed = urlparse(url)
+    if 'drive.google.com' in parsed.netloc:
+        if '/file/d/' in url:
+            return url.split('/file/d/')[1].split('/')[0]
+        elif 'id=' in url:
+            return parse_qs(parsed.query)['id'][0]
+    return None
+
+def download_from_google_drive(file_id, destination):
+    """Download a file from Google Drive using its file ID."""
+    def get_confirm_token(response):
+        for key, value in response.cookies.items():
+            if key.startswith('download_warning_'):
+                return value
+        return None
+
+    def save_response_content(response, destination):
+        CHUNK_SIZE = 32768
+        with open(destination, 'wb') as f:
+            for chunk in response.iter_content(CHUNK_SIZE):
+                if chunk:
+                    f.write(chunk)
+
+    url = f"https://docs.google.com/uc?export=download"
+    session = requests.Session()
+    response = session.get(url, params={'id': file_id}, stream=True)
+    token = get_confirm_token(response)
+
+    if token:
+        params = {'id': file_id, 'export': 'download', 'confirm': token}
+        response = session.get(url, params=params, stream=True)
+
+    save_response_content(response, destination)
+    return True
+
+def allowed_file(filename):
+    """Check if the file extension is allowed."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+# Add this new route for Google Drive downloads
+@app.route('/api/coding-resources/download/<file_id>')
+def download_from_drive(file_id):
+    try:
+        # Get token from cookie or Authorization header
+        token = request.cookies.get('studentToken') or request.headers.get('Authorization', '').replace('Bearer ', '')
+        if not token:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        # Verify token
+        try:
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            if payload.get('type') != 'student':
+                return jsonify({'error': 'Unauthorized'}), 403
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid token'}), 401
+
+        # Create resources directory if it doesn't exist
+        os.makedirs(app.config['RESOURCES_FOLDER'], exist_ok=True)
+
+        # Generate a secure filename
+        filename = secure_filename(f"{file_id.split('-')[1]}_guide.pdf")
+        file_path = os.path.join(app.config['RESOURCES_FOLDER'], filename)
+
+        # Download the file if it doesn't exist locally
+        if not os.path.exists(file_path):
+            try:
+                # Use gdown for downloading from Google Drive
+                url = f"https://drive.google.com/uc?id={file_id}"
+                gdown.download(url, file_path, quiet=False)
+            except Exception as e:
+                logger.error(f"Error downloading file: {str(e)}")
+                return jsonify({'error': 'Failed to download resource'}), 500
+
+        # Check if file exists and is allowed
+        if not os.path.exists(file_path) or not allowed_file(filename):
+            return jsonify({'error': 'Resource not found'}), 404
+
+        # Send the file
+        return send_file(
+            file_path,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/pdf'
+        )
+
+    except Exception as e:
+        logger.error(f"Error in download_from_drive: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 # Run the Flask application
 if __name__ == '__main__':
