@@ -48,23 +48,34 @@ def init_db():
     )
     ''')
 
+    # Create messages table for chat functionality
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sender TEXT NOT NULL,
+        receiver TEXT NOT NULL,
+        message TEXT NOT NULL,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
     # Add test users if they don't exist
-    test_student = ('student1', 'password123')
-    test_instructor = ('instructor1', 'password123')
+    test_student = ('student1', 'password123', 'Test Student', 'student1@example.com')
+    test_instructor = ('instructor1', 'password123', 'Test Instructor', 'instructor1@example.com', 'Mathematics')
 
     # Check if test student exists and add if not
     cursor.execute('SELECT username FROM students WHERE username = ?', (test_student[0],))
     if not cursor.fetchone():
         hashed_password = generate_password_hash(test_student[1])
-        cursor.execute('INSERT INTO students (username, password) VALUES (?, ?)',
-                      (test_student[0], hashed_password))
+        cursor.execute('INSERT INTO students (username, password, fullname, email) VALUES (?, ?, ?, ?)',
+                      (test_student[0], hashed_password, test_student[2], test_student[3]))
 
     # Check if test instructor exists and add if not
     cursor.execute('SELECT username FROM instructors WHERE username = ?', (test_instructor[0],))
     if not cursor.fetchone():
         hashed_password = generate_password_hash(test_instructor[1])
-        cursor.execute('INSERT INTO instructors (username, password) VALUES (?, ?)',
-                      (test_instructor[0], hashed_password))
+        cursor.execute('INSERT INTO instructors (username, password, fullname, email, subject) VALUES (?, ?, ?, ?, ?)',
+                      (test_instructor[0], hashed_password, test_instructor[2], test_instructor[3], test_instructor[4]))
 
     conn.commit()
     conn.close()
@@ -257,6 +268,46 @@ def get_student_results(student_id, year, semester):
             'grade': row[2],
             'credits': row[3]
         } for row in results]
+    finally:
+        conn.close()
+
+def send_message(sender, receiver, message):
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO messages (sender, receiver, message) VALUES (?, ?, ?)
+        ''', (sender, receiver, message))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error sending message: {str(e)}")
+        return False
+    finally:
+        conn.close()
+
+def get_chat_history(user1, user2, limit=100):
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            SELECT sender, receiver, message, timestamp FROM messages
+            WHERE (sender = ? AND receiver = ?) OR (sender = ? AND receiver = ?)
+            ORDER BY timestamp ASC
+            LIMIT ?
+        ''', (user1, user2, user2, user1, limit))
+        messages = cursor.fetchall()
+        return [
+            {
+                'sender': row[0],
+                'receiver': row[1],
+                'message': row[2],
+                'timestamp': row[3]
+            } for row in messages
+        ]
+    except Exception as e:
+        print(f"Error fetching chat history: {str(e)}")
+        return []
     finally:
         conn.close()
 

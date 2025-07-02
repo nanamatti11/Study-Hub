@@ -1,35 +1,28 @@
-from flask import Flask, request, jsonify, render_template, session, redirect, send_file
+import os
+import re
+import io
+import logging
+import sqlite3
+from datetime import datetime, timedelta
+from functools import wraps
+from urllib.parse import urlparse, parse_qs
+
+from flask import (
+    Flask, request, jsonify, render_template, session, redirect, send_file, url_for, flash
+)
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+import jwt
+import requests
+import gdown
+
 from database import (
     add_student, add_instructor, verify_student, verify_instructor, 
     search_students, add_result, get_student_by_username, get_student_results,
-    init_db
+    init_db,
+    send_message, get_chat_history
 )
-from functools import wraps
-import logging
-import jwt
-from datetime import datetime, timedelta
-import os
-import sqlite3
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
-import re
-import requests
-from urllib.parse import urlparse, parse_qs
-from werkzeug.utils import secure_filename
-
-import os
-import io
-import re
-
-from google.auth.transport.requests import Request # type: ignore
-from google.oauth2.credentials import Credentials # type: ignore
-from google_auth_oauthlib.flow import InstalledAppFlow # type: ignore
-from googleapiclient.discovery import build # type: ignore
-from googleapiclient.http import MediaIoBaseDownload # type: ignore
-import gdown
-
-# Replace with your actual file ID from the URL
 
 # Configure logging for debugging and error tracking
 logging.basicConfig(level=logging.DEBUG)
@@ -138,40 +131,43 @@ def new():
     return render_template('new.html')
 
 # Route for user registration
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/api/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         try:
             # Get and validate form data
             fullname = request.form.get('fullname', '').strip()
+            username = request.form.get('username', '').strip()
             email = request.form.get('email', '').strip()
             password = request.form.get('password', '')
             user_type = request.form.get('user_type', '').strip()
-            subject = request.form.get('subject', '').strip() if user_type == 'teacher' else None
+            subject = request.form.get('subject', '').strip() if user_type == 'instructor' else None
 
             # Validation checks
-            if not all([fullname, email, password, user_type]):
+            if not all([fullname, username, email, password, user_type]):
+                logger.error(f"Missing fields: fullname={fullname}, username={username}, email={email}, password={'***' if password else ''}, user_type={user_type}")
                 flash('All fields are required', 'error')
                 return redirect(url_for('register'))
 
-            if user_type not in ['teacher', 'student']:
+            if user_type not in ['instructor', 'student']:
+                logger.error(f"Invalid user_type: {user_type}")
                 flash('Invalid user type selected', 'error')
                 return redirect(url_for('register'))
 
             if not validate_email(email):
+                logger.error(f"Invalid email format: {email}")
                 flash('Invalid email format', 'error')
                 return redirect(url_for('register'))
 
             if not validate_password(password):
+                logger.error(f"Password does not meet requirements: {password}")
                 flash('Password must be at least 8 characters long and contain at least one number', 'error')
                 return redirect(url_for('register'))
 
-            if user_type == 'teacher' and not subject:
-                flash('Subject is required for teachers', 'error')
+            if user_type == 'instructor' and not subject:
+                logger.error(f"Missing subject for instructor registration")
+                flash('Subject is required for instructors', 'error')
                 return redirect(url_for('register'))
-
-            # Use email as username for uniqueness
-            username = email
 
             # Add user to appropriate table based on user_type
             if user_type == 'student':
@@ -181,7 +177,8 @@ def register():
                     fullname=fullname,
                     email=email
                 )
-            else:  # teacher
+                logger.info(f"Tried to add student: username={username}, email={email}, success={success}")
+            else:  # instructor
                 success = add_instructor(
                     username=username,
                     password=password,
@@ -189,12 +186,14 @@ def register():
                     email=email,
                     subject=subject
                 )
+                logger.info(f"Tried to add instructor: username={username}, email={email}, subject={subject}, success={success}")
 
             if success:
                 flash('Registration successful!', 'success')
                 return redirect(url_for('index'))
             else:
-                flash('Email already registered', 'error')
+                logger.error(f"Registration failed for username={username}, email={email}")
+                flash('Email or username already registered', 'error')
                 return redirect(url_for('register'))
 
         except Exception as e:
@@ -449,20 +448,24 @@ def get_student_info():
 def instructor_login():
     try:
         data = request.get_json()
+        print("Login data received:", data)  # DEBUG
+
         if not data:
             return jsonify({'success': False, 'message': 'No data provided'}), 400
             
         username = data.get('username')
         password = data.get('password')
+        print("Username:", username, "Password:", password)  # DEBUG
         
         if not username or not password:
             return jsonify({'success': False, 'message': 'Missing credentials'}), 400
         
         if verify_instructor(username, password):
+            print("Login successful for:", username)  # DEBUG
             token = jwt.encode({
                 'user': username,
                 'type': 'instructor',
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+                'exp': datetime.utcnow() + timedelta(hours=24)
             }, app.config['JWT_SECRET_KEY'], algorithm='HS256')
             
             response = jsonify({
@@ -471,18 +474,18 @@ def instructor_login():
                 'message': 'Login successful'
             })
             
-            # Set the token in a cookie
             response.set_cookie(
                 'instructorToken',
                 token,
                 httponly=True,
-                secure=False,  # Set to True in production with HTTPS
+                secure=False,
                 samesite='Lax',
-                max_age=86400  # 24 hours
+                max_age=86400
             )
             
             return response
         
+        print("Login failed for:", username)  # DEBUG
         return jsonify({'success': False, 'message': 'Invalid username or password'}), 401
     except Exception as e:
         logger.error(f"Error during instructor login: {str(e)}")
@@ -1067,6 +1070,67 @@ def download_from_drive(file_id):
     except Exception as e:
         logger.error(f"Error in download_from_drive: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
+
+# Route for showing the registration template
+@app.route('/register', methods=['GET'])
+def show_register():
+    return render_template('register.html')
+
+# API endpoint to send a chat message
+@app.route('/api/chat/send', methods=['POST'])
+def chat_send():
+    try:
+        token = request.cookies.get('studentToken') or request.cookies.get('instructorToken')
+        if not token:
+            token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        if not token:
+            return jsonify({'success': False, 'message': 'Authentication required'}), 401
+        try:
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            sender = payload.get('user')
+        except jwt.InvalidTokenError:
+            return jsonify({'success': False, 'message': 'Invalid token'}), 401
+        data = request.get_json()
+        receiver = data.get('receiver')
+        message = data.get('message')
+        if not receiver or not message:
+            return jsonify({'success': False, 'message': 'Receiver and message are required'}), 400
+        if send_message(sender, receiver, message):
+            return jsonify({'success': True, 'message': 'Message sent'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to send message'}), 500
+    except Exception as e:
+        logger.error(f"Error sending chat message: {str(e)}")
+        return jsonify({'success': False, 'message': 'Internal server error'}), 500
+
+# API endpoint to fetch chat history between two users
+@app.route('/api/chat/history', methods=['GET'])
+def chat_history():
+    try:
+        token = request.cookies.get('studentToken') or request.cookies.get('instructorToken')
+        if not token:
+            token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        if not token:
+            return jsonify({'success': False, 'message': 'Authentication required'}), 401
+        try:
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            user = payload.get('user')
+        except jwt.InvalidTokenError:
+            return jsonify({'success': False, 'message': 'Invalid token'}), 401
+        other_user = request.args.get('other_user')
+        if not other_user:
+            return jsonify({'success': False, 'message': 'other_user parameter is required'}), 400
+        messages = get_chat_history(user, other_user)
+        return jsonify({'success': True, 'messages': messages})
+    except Exception as e:
+        logger.error(f"Error fetching chat history: {str(e)}")
+        return jsonify({'success': False, 'message': 'Internal server error'}), 500
+
+# Route to render the chat page
+@app.route('/chat')
+def chat_page():
+    other_user = request.args.get('user', '')
+    return render_template('chat.html', other_user=other_user)
 
 # Run the Flask application
 if __name__ == '__main__':

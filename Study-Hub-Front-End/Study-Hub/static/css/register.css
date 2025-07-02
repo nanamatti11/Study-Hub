@@ -1,10 +1,29 @@
+html, body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, rgba(245, 247, 250, 0.4) 0%, rgba(195, 207, 226, 0.4) 100%),
+                url('/static/images/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
 /* From Uiverse.io by mi-series */ 
 .container {
+    background: rgba(255, 255, 255, 0.75);
+    padding: 50px;
+    border-radius: 30px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 1000px;
+    width: 100%;
+    backdrop-filter: blur(3px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    text-align: center;
   }
   
   .form_area {
@@ -12,16 +31,16 @@
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    background-color: #EDDCD9;
+    background: transparent;
     height: auto;
     width: auto;
-    border: 2px solid #264143;
+    border: none;
     border-radius: 20px;
-    box-shadow: 3px 4px 0px 1px #E99F4C;
+    box-shadow: none;
   }
   
   .title {
-    color: #264143;
+    color: #2d3748;
     font-weight: 900;
     font-size: 1.5em;
     margin-top: 20px;
@@ -41,36 +60,43 @@
   
   .form_style {
     outline: none;
-    border: 2px solid #264143;
-    box-shadow: 3px 4px 0px 1px #E99F4C;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     width: 290px;
     padding: 12px 10px;
     border-radius: 4px;
     font-size: 15px;
+    background: rgba(255,255,255,0.85);
   }
   
   .form_style:focus, .btn:focus {
     transform: translateY(4px);
-    box-shadow: 1px 2px 0px 0px #E99F4C;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   }
   
   .btn {
-    padding: 15px;
+    padding: 18px 45px;
     margin: 25px 0px;
     width: 290px;
-    font-size: 15px;
-    background: #DE5499;
-    border-radius: 10px;
+    font-size: 1.2rem;
+    background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+    color: white;
+    border-radius: 50px;
     font-weight: 800;
-    box-shadow: 3px 3px 0px 0px #E99F4C;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border: none;
+    transition: all 0.3s ease;
   }
   
   .btn:hover {
     opacity: .9;
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   }
   
   .link {
     font-weight: 800;
-    color: #264143;
+    color: #4a90e2;
     padding: 5px;
+    text-decoration: none;
   }
