@@ -35,6 +35,9 @@ function loadStudentInfo() {
     });
 }
 
+let resultsPending = false;
+let pendingResults = null;
+
 function viewResults() {
     const year = document.getElementById('year').value;
     const semester = document.getElementById('semester').value;
@@ -44,19 +47,19 @@ function viewResults() {
         return;
     }
 
-    // Show loading overlay
-    document.getElementById('loadingOverlay').style.display = 'flex';
-    document.getElementById('resultsContainer').style.display = 'none';
+    // Hide loading overlay and show results container immediately
+    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('resultsContainer').style.display = 'block';
+    document.getElementById('selectionForm').style.display = 'none';
 
-    // Simulate loading time (5 seconds)
-    setTimeout(() => {
-        fetchResults(year, semester);
-    }, 5000);
+    // Fetch and display results immediately
+    fetchResultsWithCallback(year, semester, (success, results, studentInfo) => {
+        displayResults(results);
+    });
 }
 
-function fetchResults(year, semester) {
+function fetchResultsWithCallback(year, semester, callback) {
     const token = localStorage.getItem('studentToken');
-
     fetch(`/api/student/results?year=${year}&semester=${semester}`, {
         headers: {
             'Authorization': `Bearer ${token}`
@@ -64,32 +67,19 @@ function fetchResults(year, semester) {
     })
     .then(response => response.json())
     .then(data => {
-        // Hide loading overlay
-        document.getElementById('loadingOverlay').style.display = 'none';
-        
-        // Hide selection form and show results
-        document.getElementById('selectionForm').style.display = 'none';
-        document.getElementById('resultsContainer').style.display = 'block';
-
         if (data.success) {
-            // Set results title
-            document.getElementById('resultsTitle').textContent = `${new Date().getFullYear()} Results - Year ${year}, Semester ${semester}`;
-            displayResults(data.results);
+            callback(true, data.results, data.student_info);
         } else {
-            document.getElementById('resultsContent').innerHTML = 
-                `<p class="error">${data.message || 'Failed to load results'}</p>`;
+            callback(false, [], null);
         }
     })
     .catch(error => {
-        document.getElementById('loadingOverlay').style.display = 'none';
-        document.getElementById('resultsContent').innerHTML = 
-            '<p class="error">An error occurred while loading results</p>';
-        document.getElementById('resultsContainer').style.display = 'block';
-        document.getElementById('selectionForm').style.display = 'none';
+        callback(false, [], null);
     });
 }
 
 function displayResults(results) {
+    document.getElementById('loadingOverlay').style.display = 'none';
     const container = document.getElementById('resultsContent');
     
     if (results.length === 0) {

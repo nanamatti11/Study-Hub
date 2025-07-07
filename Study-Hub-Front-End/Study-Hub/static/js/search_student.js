@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
         message.style.display = 'none';
         studentResults.style.display = 'none';
 
-        fetch(`/api/students/search?term=${encodeURIComponent(searchTerm)}`, {
+        fetch(`/api/students/search?query=${encodeURIComponent(searchTerm)}`, {
             headers: headers
         })
         .then(response => {
@@ -86,17 +86,41 @@ document.addEventListener('DOMContentLoaded', function() {
             const student = students[0];
             studentName.textContent = student.username;
             studentId.textContent = `ID: ${student.id}`;
-            studentEmail.textContent = `${student.username}@example.com`; // Placeholder email
+            studentEmail.textContent = student.email || `${student.username}@example.com`;
 
             // Clear previous results
             courseResults.innerHTML = '';
 
-            // Add a placeholder row for course results
-            courseResults.innerHTML = `
-                <tr>
-                    <td colspan="4" class="no-results">No course results available yet</td>
-                </tr>
-            `;
+            // Fetch and display real course results for this student
+            fetch(`/api/results/filter?student=${student.id}` , {
+                headers: headers
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.results.length > 0) {
+                    courseResults.innerHTML = data.results.map(result => `
+                        <tr>
+                            <td>${result.subject}</td>
+                            <td>${result.credits}</td>
+                            <td>${result.grade}</td>
+                            <td>${result.marks}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    courseResults.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="no-results">No course results available yet</td>
+                        </tr>
+                    `;
+                }
+            })
+            .catch(() => {
+                courseResults.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="no-results">Failed to load course results</td>
+                    </tr>
+                `;
+            });
 
             resultsContainer.style.display = 'block';
         }
