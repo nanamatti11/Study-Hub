@@ -11,7 +11,15 @@ from flask import (
     Flask, request, jsonify, render_template, session, redirect, send_file, url_for, flash
 )
 from flask_sqlalchemy import SQLAlchemy
+# <<<<<<< HEAD
+# <<<<<<< HEAD
+# from werkzeug.security import generate_password_hash, check_password_hash
+
 from werkzeug.security import generate_password_hash, check_password_hash
+# >>>>>>> origin/frontend
+# =======
+from werkzeug.security import generate_password_hash, check_password_hash
+# >>>>>>> origin/frontend
 from werkzeug.utils import secure_filename
 import jwt
 import requests
@@ -20,8 +28,12 @@ import gdown
 from database import (
     add_student, add_instructor, verify_student, verify_instructor, 
     search_students, add_result, get_student_by_username, get_student_results,
-    init_db,
-    send_message, get_chat_history
+# <<<<<<< HEAD
+#     init_db
+# =======
+#     init_db,
+#     send_message, get_chat_history
+# >>>>>>> origin/frontend
 )
 
 # Configure logging for debugging and error tracking
@@ -43,7 +55,7 @@ db = SQLAlchemy()
 db.init_app(app)
 
 # Initialize the database with required tables
-init_db()
+# init_db()
 
 # Decorator to protect routes that require authentication
 def token_required(allowed_types=("instructor",)):
@@ -161,6 +173,9 @@ def register():
                 logger.error(f"Missing subject for instructor registration")
                 flash('Subject is required for instructors', 'error')
                 return redirect(url_for('register'))
+
+            # Use email as username for uniqueness
+            username = email
 
             # Add user to appropriate table based on user_type
             if user_type == 'student':
