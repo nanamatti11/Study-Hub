@@ -46,42 +46,35 @@ db.init_app(app)
 init_db()
 
 # Decorator to protect routes that require authentication
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = None
-        
-        # Get token from headers or cookies
-        auth_header = request.headers.get('Authorization')
-        if auth_header and auth_header.startswith('Bearer '):
-            token = auth_header.split(' ')[1]
-        else:
-            token = request.cookies.get('instructorToken')
+def token_required(allowed_types=("instructor",)):
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            token = None
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                token = auth_header.split(' ')[1]
+            else:
+                token = request.cookies.get('studentToken') or request.cookies.get('instructorToken')
 
-        if not token:
-            return jsonify({'success': False, 'message': 'Token is missing'}), 401
+            if not token:
+                return jsonify({'success': False, 'message': 'Token is missing'}), 401
 
-        try:
-            # Decode and verify token
-            data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
-            
-            # Verify it's an instructor token
-            if data.get('type') != 'instructor':
-                return jsonify({'success': False, 'message': 'Invalid token type'}), 401
-
-            # Add user data to request
-            request.user = data
-            return f(*args, **kwargs)
-            
-        except jwt.ExpiredSignatureError:
-            return jsonify({'success': False, 'message': 'Token has expired'}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({'success': False, 'message': 'Invalid token'}), 401
-        except Exception as e:
-            logger.error(f"Token validation error: {str(e)}")
-            return jsonify({'success': False, 'message': 'An error occurred during token validation'}), 500
-            
-    return decorated
+            try:
+                data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+                if data.get('type') not in allowed_types:
+                    return jsonify({'success': False, 'message': 'Invalid token type'}), 401
+                request.user = data
+                return f(*args, **kwargs)
+            except jwt.ExpiredSignatureError:
+                return jsonify({'success': False, 'message': 'Token has expired'}), 401
+            except jwt.InvalidTokenError:
+                return jsonify({'success': False, 'message': 'Invalid token'}), 401
+            except Exception as e:
+                logger.error(f"Token validation error: {str(e)}")
+                return jsonify({'success': False, 'message': 'An error occurred during token validation'}), 500
+        return decorated
+    return decorator
 
 # Route for the home page
 @app.route('/')
@@ -337,41 +330,37 @@ def student_login():
 @app.route('/api/student/results')
 def get_student_results_api():
     try:
-        # Get token from headers or cookies
-        token = request.headers.get('Authorization')
-        if token and token.startswith('Bearer '):
-            token = token.split(' ')[1]
-        else:
-            token = request.cookies.get('studentToken')
-
+        token = request.cookies.get('studentToken')
+        if not token:
+            token = request.headers.get('Authorization')
+            if token and token.startswith('Bearer '):
+                token = token.split(' ')[1]
         if not token:
             return jsonify({'success': False, 'message': 'Token is missing'}), 401
-
-        # Decode token to get student info
         data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
         if data.get('type') != 'student':
             return jsonify({'success': False, 'message': 'Invalid token type'}), 401
-
         username = data['user']
         year = request.args.get('year')
         semester = request.args.get('semester')
-        
         if not year or not semester:
             return jsonify({'success': False, 'message': 'Year and semester are required'})
-        
-        # Get student ID from username
         student = get_student_by_username(username)
         if not student:
             return jsonify({'success': False, 'message': 'Student not found'}), 404
-        
-        # Get results from database
+        # Fetch full name from the database
+        conn = sqlite3.connect('study_hub.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT fullname FROM students WHERE username = ? OR email = ?', (username, username))
+        row = cursor.fetchone()
+        conn.close()
+        full_name = row[0] if row else username
         results = get_student_results(student['id'], year, semester)
-        
         return jsonify({
             'success': True,
             'results': results,
             'student_info': {
-                'name': username,
+                'name': full_name,
                 'id': student['id']
             }
         })
@@ -385,7 +374,7 @@ def get_student_results_api():
 
 # API endpoint for getting future tests
 @app.route('/api/student/future-tests')
-@token_required
+@token_required(allowed_types=("student",))
 def get_future_tests():
     # Mock future tests data - Replace with actual database query
     tests = [
@@ -407,7 +396,7 @@ def get_future_tests():
 
 # API endpoint for getting learning resources
 @app.route('/api/student/resources')
-@token_required
+@token_required(allowed_types=("student",))
 def get_learning_resources():
     # Mock learning resources data - Replace with actual database query
     resources = [
@@ -427,20 +416,31 @@ def get_learning_resources():
 
 # API endpoint for getting student info
 @app.route('/api/student/info')
-@token_required
+@token_required(allowed_types=("student",))
 def get_student_info():
-    # Get username from token
-    token = request.headers.get('Authorization').split(' ')[1]
+    token = request.headers.get('Authorization')
+    if token and token.startswith('Bearer '):
+        token = token.split(' ')[1]
+    else:
+        token = request.cookies.get('studentToken')
     data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
     username = data['user']
-    
-    # Mock student info - Replace with database query
+    student = get_student_by_username(username)
+    if not student:
+        return jsonify({'success': False, 'message': 'Student not found'}), 404
+    # Fetch full name and id from the database
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT fullname, id FROM students WHERE username = ? OR email = ?', (username, username))
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return jsonify({'success': False, 'message': 'Student not found'}), 404
     student_info = {
-        'name': 'John Doe',  # Replace with actual student name
-        'id': 'STU123456',   # Replace with actual student ID
+        'name': row[0],
+        'id': row[1],
         'username': username
     }
-    
     return jsonify({'success': True, 'student_info': student_info})
 
 # API endpoint for instructor login
@@ -548,13 +548,13 @@ def instructor_dashboard():
 
 # Route for managing results
 @app.route('/instructor/manage_results')
-@token_required
+@token_required(allowed_types=("instructor",))
 def manage_results():
     return render_template('manage_results.html')
 
 # Route for searching students
 @app.route('/instructor/search_student')
-@token_required
+@token_required(allowed_types=("instructor",))
 def search_student():
     return render_template('search_student.html')
 
@@ -581,6 +581,7 @@ def update_results():
 
 # API endpoint for searching students
 @app.route('/api/students/search')
+@token_required(allowed_types=("instructor",))
 def search_students_api():
     try:
         # Get token from headers or cookies

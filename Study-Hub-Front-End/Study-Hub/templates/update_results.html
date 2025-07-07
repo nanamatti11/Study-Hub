@@ -33,8 +33,18 @@
         }
 
         .search-form {
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .search-form .form-group {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0;
         }
 
         .form-group {
@@ -177,6 +187,21 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        #searchInput {
+            flex: 2;
+            font-size: 1.15em;
+            padding: 14px 16px;
+        }
+
+        #searchBtn.btn-search {
+            flex: 0 0 auto;
+            font-size: 0.95em;
+            padding: 8px 14px;
+            min-width: unset;
+            width: auto;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -195,7 +220,7 @@
                 <div class="search-form">
                     <div class="form-group">
                         <input type="text" id="searchInput" placeholder="Enter student username or ID">
-                        <button id="searchBtn" class="btn btn-search">
+                        <button id="searchBtn" class="btn btn-search" style="font-size:0.95em; padding:8px 14px; min-width:unset; width:auto; white-space:nowrap;">
                             <i class="fas fa-search"></i> Search Student
                         </button>
                     </div>

@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const searchTerm = document.getElementById('searchInput').value;
             
             try {
-                const response = await fetch(`/api/students/search?term=${encodeURIComponent(searchTerm)}`, {
+                const response = await fetch(`/api/students/search?query=${encodeURIComponent(searchTerm)}`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('instructorToken')}`,
                         'Content-Type': 'application/json'

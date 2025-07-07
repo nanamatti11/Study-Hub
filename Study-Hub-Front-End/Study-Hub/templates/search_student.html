@@ -6,6 +6,31 @@
     <title>Search Student - Study Hub</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/instructor_dashboard.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .results-section {
+            max-width: 1900px !important;
+            margin: 3.5rem auto !important;
+            font-size: 1.55rem !important;
+            text-align: center;
+            padding: 3rem 2.5rem !important;
+        }
+        .student-info, .student-courses {
+            font-size: 1.55rem !important;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .info-row {
+            margin-bottom: 1.5rem;
+        }
+        .results-table th, .results-table td {
+            font-size: 1.38rem !important;
+            text-align: center;
+            padding: 22px 18px;
+        }
+        .results-table th {
+            letter-spacing: 1.5px;
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
