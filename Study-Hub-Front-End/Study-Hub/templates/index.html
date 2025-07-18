@@ -20,7 +20,6 @@
                 for both students and instructors. Students can view their grades and track their progress, 
                 while instructors can manage and update results efficiently.
             </p>
-            
             <div class="features">
                 <div class="feature">
                     <i class="fas fa-chart-line"></i>
@@ -38,25 +37,28 @@
                     <p>Never miss important deadlines</p>
                 </div>
             </div>
-
-            <div class="button-container">
-                <button id="studentBtn" class="btn btn-student">
-                    <i class="fas fa-user-graduate"></i> Student Login
-                </button>
-                <button id="instructorBtn" class="btn btn-instructor">
-                    <i class="fas fa-chalkboard-teacher"></i> Instructor Login
-                </button>
-            </div>
-
-            <div class="register-section">
-                <p>Don't have an account?</p>
-                <button onclick="window.location.href='/register'" id="registerBtn" class="btn btn-register">
-                    <i class="fas fa-user-plus"></i> Register Now
-                </button>
+            <div class="auth-section">
+                <div class="button-container">
+                    <button id="studentBtn" class="btn btn-student">
+                        <i class="fas fa-user-graduate"></i> Student Login
+                    </button>
+                    <button id="instructorBtn" class="btn btn-instructor">
+                        <i class="fas fa-chalkboard-teacher"></i> Instructor Login
+                    </button>
+                </div>
+                <div class="register-section">
+                    <p>Don't have an account?</p>
+                    <button onclick="window.location.href='/register'" id="registerBtn" class="btn btn-register">
+                        <i class="fas fa-user-plus"></i> Register Now
+                    </button>
+                    <button class="google-btn" id="loginBtn">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" />
+                        <span>Sign in with Google</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-
     <!-- Student Login Form -->
     <div id="studentLoginForm" class="login-form" style="display: none;">
         <div class="error-message" id="studentLoginError" style="display: none;">
@@ -89,7 +91,6 @@
             </button>
         </form>
     </div>
-
     <!-- Instructor Login Form -->
     <div id="instructorLoginForm" class="login-form" style="display: none;">
         <div class="error-message" id="instructorLoginError" style="display: none;">
@@ -117,7 +118,6 @@
             </button>
         </form>
     </div>
-
     <footer>
         <div class="footer-content">
             <div class="footer-section">
@@ -170,7 +170,6 @@
             <p>&copy; 2024 Study Hub. All rights reserved.</p>
         </div>
     </footer>
-
     <script src="/static/js/main.js"></script>
 </body>
 </html>

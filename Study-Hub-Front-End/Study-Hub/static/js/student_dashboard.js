@@ -30,7 +30,8 @@ function backToDashboard() {
 }
 
 function logout() {
-    localStorage.removeItem('studentToken');
-    localStorage.removeItem('studentUsername');
-    window.location.href = '/';
+    auth.signOut().then(() => {
+        console.log("User signed out");
+        window.location.href = '/';
+    });
 } 

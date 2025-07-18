@@ -39,6 +39,10 @@ from database import (
 # Configure logging for debugging and error tracking
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+GOOGLE_CLIENT_ID = "76581159984-ipaa38kfmoe6nohkvvad85raa9rnep0n.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET = "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"
+REDIRECT_URI = "http://localhost:5000/callback"
+
 
 # Initialize Flask application
 app = Flask(__name__)
@@ -50,9 +54,15 @@ app.config['JWT_SECRET_KEY'] = app.config['SECRET_KEY']  # Use the same key for 
 app.config['RESOURCES_FOLDER'] = os.path.join(app.static_folder, 'resources')
 app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'doc', 'docx', 'txt'}
 
+
+
+
 # Initialize SQLAlchemy with the app for database operations
 db = SQLAlchemy()
 db.init_app(app)
+
+
+
 
 # Initialize the database with required tables
 # init_db()
@@ -131,9 +141,9 @@ def validate_password(password):
     return len(password) >= 8 and any(char.isdigit() for char in password)
 
 # Route for new user page
-@app.route('/new/user')
-def new():
-    return render_template('new.html')
+# @app.route('/new/user')
+# def new():
+#     return render_template('new.html')
 
 # Route for user registration
 @app.route('/api/register', methods=['GET', 'POST'])

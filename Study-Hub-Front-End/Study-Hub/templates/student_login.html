@@ -32,8 +32,41 @@
                 <a href="/">← Back to Home</a>
             </div>
         </div>
+        <button id="loginBtn">Login with Google</button>
+
+<script>
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  document.getElementById("loginBtn").addEventListener("click", () => {
+    auth.signInWithPopup(provider)
+      .then((result) => {
+        const user = result.user;
+        console.log("User signed in:", user.displayName);
+      })
+      .catch((error) => {
+        console.error("Error during sign-in:", error.message);
+      });
+  });
+</script>
     </div>
 
-    <script src="../static/js/student_login.js"></script>
+    <!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
+
+<script>
+  // Your Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyCKY6C8kJzBhZLedxxg6WU3pbd-1ZCsmhA",
+    authDomain: "studyhub1-dcd95.firebaseapp.com",
+    projectId: "studyhub1-dcd95",
+    appId: "1:748783176770:web:03bab989c802b2fe2531db"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+</script>
+
 </body>
 </html> 
