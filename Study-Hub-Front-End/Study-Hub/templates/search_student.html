@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Student - Study Hub</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/instructor_dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .results-section {
+            max-width: 1900px !important;
+            margin: 3.5rem auto !important;
+            font-size: 1.55rem !important;
+            text-align: center;
+            padding: 3rem 2.5rem !important;
+        }
+        .student-info, .student-courses {
+            font-size: 1.55rem !important;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .info-row {
+            margin-bottom: 1.5rem;
+        }
+        .results-table th, .results-table td {
+            font-size: 1.38rem !important;
+            text-align: center;
+            padding: 22px 18px;
+        }
+        .results-table th {
+            letter-spacing: 1.5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>Search Student</h1>
+            <div class="user-info">
+                <button onclick="location.href='/instructor/dashboard'" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </button>
+            </div>
+        </header>
+
+        <main class="dashboard-content">
+            <section class="search-section">
+                <div class="search-form">
+                    <div class="form-group">
+                        <input type="text" id="searchInput" placeholder="Enter student username or ID">
+                        <button id="searchBtn" class="btn-search">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="results-section" id="studentResults" style="display: none;">
+                <h2>Student Information</h2>
+                <div class="student-info">
+                    <div class="info-row">
+                        <span class="label">Name:</span>
+                        <span id="studentName" class="value"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">ID:</span>
+                        <span id="studentId" class="value"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Email:</span>
+                        <span id="studentEmail" class="value"></span>
+                    </div>
+                </div>
+
+                <div class="student-courses">
+                    <h3>Course Results</h3>
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Course</th>
+                                <th>Credits</th>
+                                <th>Grade</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="courseResults">
+                            <!-- Course results will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <div id="message" class="message"></div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/search_student.js') }}"></script>
+</body>
+</html> 

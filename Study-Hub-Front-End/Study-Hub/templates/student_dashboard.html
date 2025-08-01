@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Study Hub</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <style>
+        .dashboard-container {
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard-header {
+            background: rgba(255, 255, 255, 0.85);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-logout {
+            padding: 8px 16px;
+            background: #e53e3e;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: #c53030;
+        }
+
+        .dashboard-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .dashboard-btn {
+            padding: 30px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.85);
+            color: #2d3748;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .dashboard-btn i {
+            font-size: 2em;
+            color: #4299e1;
+        }
+
+        .dashboard-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .dashboard-btn.check-result {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+        }
+
+        .dashboard-btn.check-result i {
+            color: white;
+        }
+
+        .dashboard-btn.future-test {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .dashboard-btn.future-test i {
+            color: white;
+        }
+
+        .dashboard-btn.learning-resources {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            color: white;
+        }
+
+        .dashboard-btn.learning-resources i {
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-buttons {
+                grid-template-columns: 1fr;
+                padding: 10px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>Student Dashboard</h1>
+            <div class="user-info">
+                <span id="username"></span>
+                <button onclick="logout()" class="btn-logout">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </header>
+
+        <div class="dashboard-buttons">
+            <button class="dashboard-btn check-result" onclick="window.location.href='/student/check-result'">
+                <i class="fas fa-chart-bar"></i>
+                CHECK RESULT
+            </button>
+            <button class="dashboard-btn future-test" onclick="window.location.href='/student/future-tests'">
+                <i class="fas fa-calendar-alt"></i>
+                FUTURE TEST
+            </button>
+            <button class="dashboard-btn learning-resources" onclick="window.location.href='/student/learning-resources'">
+                <i class="fas fa-book-reader"></i>
+                LEARNING RESOURCES
+            </button>
+            <button class="dashboard-btn chat-btn" onclick="window.location.href='/chat?user=instructor1'">
+                <i class="fas fa-comments"></i>
+                CHAT WITH INSTRUCTOR
+            </button>
+        </div>
+    </div>
+
+    <script src="/static/js/student_dashboard.js"></script>
+</body>
+</html> 

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add/Update Results - Study Hub</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/instructor_dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .dashboard-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f6f9fc 0%, #ecf0f5 100%);
+            padding: 20px;
+        }
+
+        .dashboard-header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .search-form {
+            max-width: 700px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .search-form .form-group {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            color: #2d3748;
+            background-color: #f8fafc;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-search {
+            background: #4299e1;
+            color: white;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-search:hover {
+            background: #3182ce;
+        }
+
+        .btn-back {
+            background: #718096;
+            color: white;
+        }
+
+        .btn-back:hover {
+            background: #4a5568;
+        }
+
+        .btn-submit {
+            background: #48bb78;
+            color: white;
+            width: 100%;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-submit:hover {
+            background: #38a169;
+        }
+
+        .results-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .message.success {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .message.error {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-content {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3182ce;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #searchInput {
+            flex: 2;
+            font-size: 1.15em;
+            padding: 14px 16px;
+        }
+
+        #searchBtn.btn-search {
+            flex: 0 0 auto;
+            font-size: 0.95em;
+            padding: 8px 14px;
+            min-width: unset;
+            width: auto;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>Add/Update Results</h1>
+            <div class="user-info">
+                <button onclick="location.href='/instructor/dashboard'" class="btn btn-back">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </button>
+            </div>
+        </header>
+
+        <main class="dashboard-content">
+            <section class="search-section">
+                <div class="search-form">
+                    <div class="form-group">
+                        <input type="text" id="searchInput" placeholder="Enter student username or ID">
+                        <button id="searchBtn" class="btn btn-search" style="font-size:0.95em; padding:8px 14px; min-width:unset; width:auto; white-space:nowrap;">
+                            <i class="fas fa-search"></i> Search Student
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="results-section" id="updateForm" style="display: none;">
+                <h2>Add/Update Student Results</h2>
+                <div class="results-form">
+                    <div class="form-group">
+                        <label for="studentName">Student Name</label>
+                        <input type="text" id="studentName" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="studentId">Student ID</label>
+                        <input type="text" id="studentId" readonly>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="academicYear">Academic Year</label>
+                            <select id="academicYear" required>
+                                <option value="">Select Year</option>
+                                <option value="1">Year 1</option>
+                                <option value="2">Year 2</option>
+                                <option value="3">Year 3</option>
+                                <option value="4">Year 4</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="semester">Semester</label>
+                            <select id="semester" required>
+                                <option value="">Select Semester</option>
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <input type="text" id="subject" required placeholder="Enter subject name">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="credits">Credits</label>
+                            <input type="number" id="credits" min="1" max="6" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="grade">Grade</label>
+                            <select id="grade" required>
+                                <option value="">Select Grade</option>
+                                <option value="A">A</option>
+                                <option value="B+">B+</option>
+                                <option value="B">B</option>
+                                <option value="C+">C+</option>
+                                <option value="C">C</option>
+                                <option value="D+">D+</option>
+                                <option value="D">D</option>
+                                <option value="F">F</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="marks">Marks</label>
+                            <input type="number" id="marks" min="0" max="100" required>
+                        </div>
+                    </div>
+                    <button id="submitResult" class="btn btn-submit">
+                        <i class="fas fa-save"></i> Save Result
+                    </button>
+                </div>
+            </section>
+
+            <div id="message" class="message"></div>
+        </main>
+    </div>
+
+    <script>
+        // Function to show loading overlay
+        function showLoading() {
+            const overlay = document.createElement('div');
+            overlay.className = 'loading-overlay';
+            overlay.innerHTML = `
+                <div class="loading-content">
+                    <div class="spinner"></div>
+                    <p>Processing...</p>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        // Function to hide loading overlay
+        function hideLoading() {
+            const overlay = document.querySelector('.loading-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+
+        // Function to show message
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+            setTimeout(() => {
+                messageDiv.textContent = '';
+                messageDiv.className = 'message';
+            }, 5000);
+        }
+
+        // Function to search student
+        async function searchStudent() {
+            const searchInput = document.getElementById('searchInput').value.trim();
+            if (!searchInput) {
+                showMessage('Please enter a student username or ID', 'error');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch(`/api/students/search?query=${encodeURIComponent(searchInput)}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('instructorToken')}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.students.length > 0) {
+                    const student = data.students[0];
+                    document.getElementById('studentName').value = student.username;
+                    document.getElementById('studentId').value = student.id;
+                    document.getElementById('updateForm').style.display = 'block';
+                } else {
+                    showMessage('Student not found', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('An error occurred while searching for the student', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Function to submit result
+        async function submitResult() {
+            const studentId = document.getElementById('studentId').value;
+            const subject = document.getElementById('subject').value.trim();
+            const marks = document.getElementById('marks').value;
+            const grade = document.getElementById('grade').value;
+            const credits = document.getElementById('credits').value;
+            const academicYear = document.getElementById('academicYear').value;
+            const semester = document.getElementById('semester').value;
+
+            // Validate inputs
+            if (!studentId || !subject || !marks || !grade || !credits || !academicYear || !semester) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+
+            if (marks < 0 || marks > 100) {
+                showMessage('Marks must be between 0 and 100', 'error');
+                return;
+            }
+
+            if (credits < 1 || credits > 6) {
+                showMessage('Credits must be between 1 and 6', 'error');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch('/api/results', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('instructorToken')}`
+                    },
+                    body: JSON.stringify({
+                        student_id: studentId,
+                        subject: subject,
+                        marks: parseInt(marks),
+                        grade: grade,
+                        credits: parseInt(credits),
+                        academic_year: academicYear,
+                        semester: semester
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('Result added successfully', 'success');
+                    // Clear form
+                    document.getElementById('subject').value = '';
+                    document.getElementById('marks').value = '';
+                    document.getElementById('grade').value = '';
+                    document.getElementById('credits').value = '';
+                    document.getElementById('academicYear').value = '';
+                    document.getElementById('semester').value = '';
+                } else {
+                    showMessage(data.message || 'Failed to add result', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('An error occurred while adding the result', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Add event listeners
+        document.getElementById('searchBtn').addEventListener('click', searchStudent);
+        document.getElementById('submitResult').addEventListener('click', submitResult);
+
+        // Add enter key support for search
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchStudent();
+            }
+        });
+    </script>
+</body>
+</html> 

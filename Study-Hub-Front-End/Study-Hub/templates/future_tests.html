@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Future Tests - Study Hub</title>
+    <link rel="stylesheet" href="/static/css/future_tests.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <button onclick="window.location.href='/student/dashboard'" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </button>
+
+        <div class="content">
+            <div class="info-card">
+                <h1 class="page-title">Future Tests</h1>
+                <p class="info-message">
+                    Here are your upcoming assessments and examinations. Stay prepared! 📚
+                </p>
+
+                <div id="loadingAnimation" class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <p>Loading upcoming tests...</p>
+                </div>
+
+                <div id="testsDisplay" class="info-content" style="display: none;">
+                    <div class="info-item">
+                        <div class="info-date">March 15, 2024</div>
+                        <div class="info-title">Mathematics</div>
+                        <div class="info-details">
+                            <div class="detail-item">
+                                <i class="fas fa-clock"></i> 2 hours
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-map-marker-alt"></i> Room 301
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-book"></i> Mid-semester examination
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-date">March 20, 2024</div>
+                        <div class="info-title">Physics</div>
+                        <div class="info-details">
+                            <div class="detail-item">
+                                <i class="fas fa-clock"></i> 1.5 hours
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-map-marker-alt"></i> Lab 204
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-flask"></i> Laboratory assessment
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-date">March 25, 2024</div>
+                        <div class="info-title">Computer Science</div>
+                        <div class="info-details">
+                            <div class="detail-item">
+                                <i class="fas fa-clock"></i> 3 hours
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-map-marker-alt"></i> Computer Lab
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-laptop-code"></i> Programming practical
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/future_tests.js"></script>
+</body>
+</html> 

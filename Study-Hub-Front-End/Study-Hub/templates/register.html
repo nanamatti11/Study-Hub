@@ -1,0 +1,60 @@
+<!-- From Uiverse.io by mi-series --> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/register.css">
+    <title>Register</title>
+</head>
+<body>
+<div class="container">
+    <div class="form_area">
+        <p class="title">SIGN UP</p>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <ul class="flashes">
+              {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+        <form action="/api/register" method="post">
+            <div class="form_group">
+                <label class="sub_title" for="fullname">Name</label>
+                <input placeholder="Enter your full name" class="form_style" type="text" id="fullname" name="fullname" required>
+            </div>
+            <div class="form_group">
+                <label class="sub_title" for="username">Username</label>
+                <input placeholder="Enter your username" class="form_style" type="text" id="username" name="username" required>
+            </div>
+            <div class="form_group">
+                <label class="sub_title" for="email">Email</label>
+                <input placeholder="Enter your email" id="email" class="form_style" type="email" name="email" required>
+            </div>
+            <div class="form_group">
+                <label class="sub_title" for="password">Password</label>
+                <input placeholder="Enter your password" id="password" class="form_style" type="password" name="password" required>
+            </div>
+            <div class="form_group">
+                <label class="sub_title" for="user_type">Register as</label>
+                <select id="user_type" name="user_type" class="form_style" required onchange="document.getElementById('subject_group').style.display = this.value === 'instructor' ? 'block' : 'none';">
+                    <option value="">Select user type</option>
+                    <option value="student">Student</option>
+                    <option value="instructor">Instructor</option>
+                </select>
+            </div>
+            <div class="form_group" id="subject_group" style="display:none;">
+                <label class="sub_title" for="subject">Subject (for instructors)</label>
+                <input placeholder="Enter your subject" id="subject" class="form_style" type="text" name="subject">
+            </div>
+            <div>
+                <button class="btn" type="submit">SIGN UP</button>
+                <p>Have an Account? <a class="link" href="{{ url_for('index') }}">Login Here!</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

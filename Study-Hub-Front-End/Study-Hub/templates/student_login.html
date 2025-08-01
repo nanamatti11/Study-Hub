@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login - Study Hub</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet" href="../static/css/login.css">
+</head>
+<body>
+    <div class="container">
+        <div class="login-form">
+            <h1>Student Login</h1>
+            <div class="error-message" id="errorMessage">
+                Incorrect username or password. Please try again.
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="forgot-password">
+                    <a href="/student/forgot-password">Forgot Password?</a>
+                </div>
+                <button type="submit" class="btn btn-student">Login</button>
+            </form>
+            <div class="back-to-home">
+                <a href="/">← Back to Home</a>
+            </div>
+        </div>
+        <button id="loginBtn">Login with Google</button>
+
+<script>
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  document.getElementById("loginBtn").addEventListener("click", () => {
+    auth.signInWithPopup(provider)
+      .then((result) => {
+        const user = result.user;
+        console.log("User signed in:", user.displayName);
+      })
+      .catch((error) => {
+        console.error("Error during sign-in:", error.message);
+      });
+  });
+</script>
+    </div>
+
+    <!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
+
+<script>
+  // Your Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyCKY6C8kJzBhZLedxxg6WU3pbd-1ZCsmhA",
+    authDomain: "studyhub1-dcd95.firebaseapp.com",
+    projectId: "studyhub1-dcd95",
+    appId: "1:748783176770:web:03bab989c802b2fe2531db"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+</script>
+
+</body>
+</html> 
