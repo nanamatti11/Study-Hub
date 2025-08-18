@@ -59,6 +59,42 @@ def init_db():
     )
     ''')
 
+    # Create future_tests table to store upcoming tests
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS future_tests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        subject TEXT NOT NULL,
+        test_date DATE NOT NULL,
+        test_time TIME NOT NULL,
+        duration TEXT NOT NULL,
+        location TEXT,
+        test_type TEXT,
+        description TEXT,
+        instructor_id INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (instructor_id) REFERENCES instructors (id)
+    )
+    ''')
+
+    # Create evaluations table to store student feedback
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS evaluations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id INTEGER NOT NULL,
+        instructor_id INTEGER NOT NULL,
+        subject TEXT NOT NULL,
+        teaching_quality INTEGER NOT NULL CHECK (teaching_quality >= 1 AND teaching_quality <= 5),
+        course_content INTEGER NOT NULL CHECK (course_content >= 1 AND course_content <= 5),
+        communication INTEGER NOT NULL CHECK (communication >= 1 AND communication <= 5),
+        overall_rating INTEGER NOT NULL CHECK (overall_rating >= 1 AND overall_rating <= 5),
+        comments TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (student_id) REFERENCES students (id),
+        FOREIGN KEY (instructor_id) REFERENCES instructors (id),
+        UNIQUE(student_id, instructor_id, subject)
+    )
+    ''')
+
     # Add test users if they don't exist
     test_student = ('student1', 'password123', 'Test Student', 'student1@example.com')
     test_instructor = ('instructor1', 'password123', 'Test Instructor', 'instructor1@example.com', 'Mathematics')
@@ -310,6 +346,176 @@ def get_chat_history(user1, user2, limit=100):
         ]
     except Exception as e:
         print(f"Error fetching chat history: {str(e)}")
+        return []
+    finally:
+        conn.close()
+
+
+# Get instructor by username
+def get_instructor_by_username(username):
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute('SELECT id, username, fullname, email, subject FROM instructors WHERE username = ? OR email = ?', (username, username))
+        result = cursor.fetchone()
+        if result:
+            return {'id': result[0], 'username': result[1], 'fullname': result[2], 'email': result[3], 'subject': result[4]}
+        return None
+    except Exception as e:
+        print(f"Error getting instructor: {str(e)}")
+        return None
+    finally:
+        conn.close()
+
+# Add a future test
+def add_future_test(subject, test_date, test_time, duration, location, test_type, description, instructor_id):
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO future_tests (subject, test_date, test_time, duration, location, test_type, description, instructor_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (subject, test_date, test_time, duration, location, test_type, description, instructor_id))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error adding future test: {str(e)}")
+        return False
+    finally:
+        conn.close()
+
+# Get all future tests
+def get_all_future_tests():
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            SELECT ft.id, ft.subject, ft.test_date, ft.test_time, ft.duration, 
+                   ft.location, ft.test_type, ft.description, i.fullname as instructor_name
+            FROM future_tests ft
+            JOIN instructors i ON ft.instructor_id = i.id
+            ORDER BY ft.test_date ASC, ft.test_time ASC
+        ''')
+        results = cursor.fetchall()
+        return [{
+            'id': row[0], 'subject': row[1], 'test_date': row[2], 'test_time': row[3],
+            'duration': row[4], 'location': row[5], 'test_type': row[6], 
+            'description': row[7], 'instructor_name': row[8]
+        } for row in results]
+    except Exception as e:
+        print(f"Error getting future tests: {str(e)}")
+        return []
+    finally:
+        conn.close()
+
+# Get future tests by instructor
+def get_future_tests_by_instructor(instructor_id):
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            SELECT id, subject, test_date, test_time, duration, location, test_type, description
+            FROM future_tests 
+            WHERE instructor_id = ?
+            ORDER BY test_date ASC, test_time ASC
+        ''', (instructor_id,))
+        results = cursor.fetchall()
+        return [{
+            'id': row[0], 'subject': row[1], 'test_date': row[2], 'test_time': row[3],
+            'duration': row[4], 'location': row[5], 'test_type': row[6], 'description': row[7]
+        } for row in results]
+    except Exception as e:
+        print(f"Error getting instructor's future tests: {str(e)}")
+        return []
+    finally:
+        conn.close()
+
+# Update a future test
+def update_future_test(test_id, subject, test_date, test_time, duration, location, test_type, description):
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            UPDATE future_tests 
+            SET subject = ?, test_date = ?, test_time = ?, duration = ?, 
+                location = ?, test_type = ?, description = ?
+            WHERE id = ?
+        ''', (subject, test_date, test_time, duration, location, test_type, description, test_id))
+        conn.commit()
+        return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating future test: {str(e)}")
+        return False
+    finally:
+        conn.close()
+
+# Delete a future test
+def delete_future_test(test_id):
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute('DELETE FROM future_tests WHERE id = ?', (test_id,))
+        conn.commit()
+        return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error deleting future test: {str(e)}")
+        return False
+    finally:
+        conn.close()
+
+# Add an evaluation
+def add_evaluation(student_id, instructor_id, subject, teaching_quality, course_content, communication, overall_rating, comments):
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT OR REPLACE INTO evaluations 
+            (student_id, instructor_id, subject, teaching_quality, course_content, communication, overall_rating, comments)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (student_id, instructor_id, subject, teaching_quality, course_content, communication, overall_rating, comments))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error adding evaluation: {str(e)}")
+        return False
+    finally:
+        conn.close()
+
+# Get evaluations for an instructor
+def get_instructor_evaluations(instructor_id):
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            SELECT e.id, s.fullname as student_name, e.subject, e.teaching_quality, 
+                   e.course_content, e.communication, e.overall_rating, e.comments, e.created_at
+            FROM evaluations e
+            JOIN students s ON e.student_id = s.id
+            WHERE e.instructor_id = ?
+            ORDER BY e.created_at DESC
+        ''', (instructor_id,))
+        results = cursor.fetchall()
+        return [{
+            'id': row[0], 'student_name': row[1], 'subject': row[2], 'teaching_quality': row[3],
+            'course_content': row[4], 'communication': row[5], 'overall_rating': row[6], 
+            'comments': row[7], 'created_at': row[8]
+        } for row in results]
+    except Exception as e:
+        print(f"Error getting instructor evaluations: {str(e)}")
+        return []
+    finally:
+        conn.close()
+
+# Get all instructors for evaluation selection
+def get_all_instructors():
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute('SELECT id, username, fullname, subject FROM instructors ORDER BY fullname')
+        results = cursor.fetchall()
+        return [{'id': row[0], 'username': row[1], 'fullname': row[2], 'subject': row[3]} for row in results]
+    except Exception as e:
+        print(f"Error getting instructors: {str(e)}")
         return []
     finally:
         conn.close()

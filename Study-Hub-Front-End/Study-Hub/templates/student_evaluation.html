@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluation - Study Hub</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .evaluation-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .evaluation-form {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+        
+        .rating-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .rating-label {
+            min-width: 200px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .star-rating {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .star {
+            font-size: 24px;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .star.active,
+        .star:hover {
+            color: #ffd700;
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+        }
+        
+        .btn-back {
+            background: #718096;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        
+        .success-message,
+        .error-message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .success-message {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .error-message {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+    </style>
+</head>
+<body>
+    <div class="evaluation-container">
+        <button onclick="window.location.href='/student/dashboard'" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </button>
+        
+        <div class="evaluation-form">
+            <h2><i class="fas fa-star"></i> Evaluate Instructor</h2>
+            <p>Please provide your feedback on the instructor and lesson quality.</p>
+            
+            <div id="successMessage" class="success-message"></div>
+            <div id="errorMessage" class="error-message"></div>
+            
+            <form id="evaluationForm">
+                <div class="form-group">
+                    <label for="instructor">Select Instructor:</label>
+                    <select id="instructor" name="instructor_id" required>
+                        <option value="">Choose an instructor...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="subject">Subject:</label>
+                    <select id="subject" name="subject" required>
+                        <option value="">Select subject...</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Physics">Physics</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="English">English</option>
+                        <option value="Chemistry">Chemistry</option>
+                        <option value="Biology">Biology</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <h3>Rate the following aspects (1-5 stars):</h3>
+                    
+                    <div class="rating-group">
+                        <span class="rating-label">Teaching Quality:</span>
+                        <div class="star-rating" data-rating="teaching_quality">
+                            <i class="fas fa-star star" data-value="1"></i>
+                            <i class="fas fa-star star" data-value="2"></i>
+                            <i class="fas fa-star star" data-value="3"></i>
+                            <i class="fas fa-star star" data-value="4"></i>
+                            <i class="fas fa-star star" data-value="5"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="rating-group">
+                        <span class="rating-label">Course Content:</span>
+                        <div class="star-rating" data-rating="course_content">
+                            <i class="fas fa-star star" data-value="1"></i>
+                            <i class="fas fa-star star" data-value="2"></i>
+                            <i class="fas fa-star star" data-value="3"></i>
+                            <i class="fas fa-star star" data-value="4"></i>
+                            <i class="fas fa-star star" data-value="5"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="rating-group">
+                        <span class="rating-label">Communication:</span>
+                        <div class="star-rating" data-rating="communication">
+                            <i class="fas fa-star star" data-value="1"></i>
+                            <i class="fas fa-star star" data-value="2"></i>
+                            <i class="fas fa-star star" data-value="3"></i>
+                            <i class="fas fa-star star" data-value="4"></i>
+                            <i class="fas fa-star star" data-value="5"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="rating-group">
+                        <span class="rating-label">Overall Rating:</span>
+                        <div class="star-rating" data-rating="overall_rating">
+                            <i class="fas fa-star star" data-value="1"></i>
+                            <i class="fas fa-star star" data-value="2"></i>
+                            <i class="fas fa-star star" data-value="3"></i>
+                            <i class="fas fa-star star" data-value="4"></i>
+                            <i class="fas fa-star star" data-value="5"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="comments">Additional Comments (Optional):</label>
+                    <textarea id="comments" name="comments" rows="4" placeholder="Share your thoughts about the instructor and lesson..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-paper-plane"></i> Submit Evaluation
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="/static/js/student_evaluation.js"></script>
+</body>
+</html>

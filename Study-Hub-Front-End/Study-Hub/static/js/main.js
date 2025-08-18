@@ -114,9 +114,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Show loading state
             const submitBtn = studentForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
             if (submitBtn) {
-                const originalBtnText = submitBtn.textContent;
-                submitBtn.textContent = 'Logging in...';
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
                 submitBtn.disabled = true;
             }
 
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         studentLoginError.style.display = 'block';
                     }
                     if (submitBtn) {
-                        submitBtn.textContent = originalBtnText;
+                        submitBtn.innerHTML = originalBtnText;
                         submitBtn.disabled = false;
                     }
                 }
@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     studentLoginError.style.display = 'block';
                 }
                 if (submitBtn) {
-                    submitBtn.textContent = originalBtnText;
+                    submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 }
             });
@@ -185,9 +185,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Show loading state
             const submitBtn = instructorForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
             if (submitBtn) {
-                const originalBtnText = submitBtn.textContent;
-                submitBtn.textContent = 'Logging in...';
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
                 submitBtn.disabled = true;
             }
 
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         instructorLoginError.style.display = 'block';
                     }
                     if (submitBtn) {
-                        submitBtn.textContent = originalBtnText;
+                        submitBtn.innerHTML = originalBtnText;
                         submitBtn.disabled = false;
                     }
                 }
@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     instructorLoginError.style.display = 'block';
                 }
                 if (submitBtn) {
-                    submitBtn.textContent = originalBtnText;
+                    submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 }
             });

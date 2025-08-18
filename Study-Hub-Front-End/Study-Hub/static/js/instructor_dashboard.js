@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchStudentBtn = document.getElementById('searchStudentBtn');
     const addResultBtn = document.getElementById('addResultBtn');
     const manageResultsBtn = document.getElementById('manageResultsBtn');
+    const manageFutureTestsBtn = document.getElementById('manageFutureTestsBtn');
 
     if (searchStudentBtn) {
         searchStudentBtn.addEventListener('click', () => {
@@ -44,6 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (manageResultsBtn) {
         manageResultsBtn.addEventListener('click', () => {
             window.location.href = '/instructor/manage_results';
+        });
+    }
+
+    if (manageFutureTestsBtn) {
+        manageFutureTestsBtn.addEventListener('click', () => {
+            window.location.href = '/instructor/manage_future_tests';
         });
     }
 

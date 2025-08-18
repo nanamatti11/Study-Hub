@@ -20,8 +20,10 @@ import gdown
 from database import (
     add_student, add_instructor, verify_student, verify_instructor, 
     search_students, add_result, get_student_by_username, get_student_results,
-    init_db,
-    send_message, get_chat_history
+    init_db, send_message, get_chat_history, get_instructor_by_username,
+    add_future_test, get_all_future_tests, get_future_tests_by_instructor,
+    update_future_test, delete_future_test, add_evaluation, get_instructor_evaluations,
+    get_all_instructors
 )
 
 # Configure logging for debugging and error tracking
@@ -61,7 +63,7 @@ def token_required(allowed_types=("instructor",)):
                 return jsonify({'success': False, 'message': 'Token is missing'}), 401
 
             try:
-                data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+                data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
                 if data.get('type') not in allowed_types:
                     return jsonify({'success': False, 'message': 'Invalid token type'}), 401
                 request.user = data
@@ -337,7 +339,7 @@ def get_student_results_api():
                 token = token.split(' ')[1]
         if not token:
             return jsonify({'success': False, 'message': 'Token is missing'}), 401
-        data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
         if data.get('type') != 'student':
             return jsonify({'success': False, 'message': 'Invalid token type'}), 401
         username = data['user']
@@ -367,6 +369,7 @@ def get_student_results_api():
     except jwt.ExpiredSignatureError:
         return jsonify({'success': False, 'message': 'Token has expired'}), 401
     except jwt.InvalidTokenError:
+        logger.error(f"Error getting student results: Invalid token")
         return jsonify({'success': False, 'message': 'Invalid token'}), 401
     except Exception as e:
         logger.error(f"Error getting student results: {str(e)}")
@@ -376,23 +379,27 @@ def get_student_results_api():
 @app.route('/api/student/future-tests')
 @token_required(allowed_types=("student",))
 def get_future_tests():
-    # Mock future tests data - Replace with actual database query
-    tests = [
-        {
-            'subject': 'Mathematics',
-            'date': '2024-04-15',
-            'time': '10:00 AM',
-            'duration': '2 hours'
-        },
-        {
-            'subject': 'Physics',
-            'date': '2024-04-18',
-            'time': '2:00 PM',
-            'duration': '3 hours'
-        }
-    ]
-    
-    return jsonify({'success': True, 'tests': tests})
+    try:
+        tests = get_all_future_tests()
+        # Format the data for frontend consumption
+        formatted_tests = []
+        for test in tests:
+            formatted_tests.append({
+                'id': test['id'],
+                'subject': test['subject'],
+                'date': test['test_date'],
+                'time': test['test_time'],
+                'duration': test['duration'],
+                'location': test['location'],
+                'test_type': test['test_type'],
+                'description': test['description'],
+                'instructor_name': test['instructor_name']
+            })
+        
+        return jsonify({'success': True, 'tests': formatted_tests})
+    except Exception as e:
+        logger.error(f"Error getting future tests: {str(e)}")
+        return jsonify({'success': False, 'message': 'An error occurred while fetching future tests'}), 500
 
 # API endpoint for getting learning resources
 @app.route('/api/student/resources')
@@ -423,7 +430,7 @@ def get_student_info():
         token = token.split(' ')[1]
     else:
         token = request.cookies.get('studentToken')
-    data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+    data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
     username = data['user']
     student = get_student_by_username(username)
     if not student:
@@ -466,7 +473,7 @@ def instructor_login():
                 'user': username,
                 'type': 'instructor',
                 'exp': datetime.utcnow() + timedelta(hours=24)
-            }, app.config['JWT_SECRET_KEY'], algorithm='HS256')
+            }, app.config['SECRET_KEY'], algorithm='HS256')
             
             response = jsonify({
                 'success': True,
@@ -497,11 +504,13 @@ def student_register():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
+    fullname = data.get('fullname', username)  # Default to username if not provided
+    email = data.get('email', f"{username}@example.com")  # Default email if not provided
 
     if not username or not password:
         return jsonify({'success': False, 'message': 'Username and password are required'})
 
-    if add_student(username, password):
+    if add_student(username, password, fullname, email):
         return jsonify({'success': True, 'message': 'Student registered successfully'})
     else:
         return jsonify({'success': False, 'message': 'Username already exists'})
@@ -531,7 +540,7 @@ def instructor_dashboard():
             return redirect('/')
             
         # Verify the token
-        data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
         
         # Verify it's an instructor token
         if data.get('type') != 'instructor':
@@ -568,7 +577,7 @@ def update_results():
             return redirect('/')
             
         # Verify the token
-        data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
         
         # Verify it's an instructor token
         if data.get('type') != 'instructor':
@@ -584,21 +593,6 @@ def update_results():
 @token_required(allowed_types=("instructor",))
 def search_students_api():
     try:
-        # Get token from headers or cookies
-        token = request.headers.get('Authorization')
-        if token and token.startswith('Bearer '):
-            token = token.split(' ')[1]
-        else:
-            token = request.cookies.get('instructorToken')
-
-        if not token:
-            return jsonify({'success': False, 'message': 'Token is missing'}), 401
-
-        # Decode token to get instructor info
-        data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
-        if data.get('type') != 'instructor':
-            return jsonify({'success': False, 'message': 'Invalid token type'}), 401
-
         search_term = request.args.get('query', '')
         if not search_term:
             return jsonify({'success': False, 'message': 'Search term is required'}), 400
@@ -628,7 +622,7 @@ def submit_result():
             return jsonify({'success': False, 'message': 'Token is missing'}), 401
 
         # Decode token to get instructor info
-        data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
         if data.get('type') != 'instructor':
             return jsonify({'success': False, 'message': 'Invalid token type'}), 401
 
@@ -672,7 +666,7 @@ def instructor_button():
             try:
                 # Verify the token
                 token = token.split(' ')[1]  # Remove 'Bearer ' prefix
-                data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+                data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
                 if data['type'] == 'instructor':
                     return jsonify({
                         'success': True,
@@ -710,7 +704,7 @@ def get_all_results():
             return jsonify({'success': False, 'message': 'Token is missing'}), 401
 
         # Decode token to get instructor info
-        data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
         if data.get('type') != 'instructor':
             return jsonify({'success': False, 'message': 'Invalid token type'}), 401
 
@@ -762,7 +756,7 @@ def filter_results():
             return jsonify({'success': False, 'message': 'Token is missing'}), 401
 
         # Decode token to get instructor info
-        data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
         if data.get('type') != 'instructor':
             return jsonify({'success': False, 'message': 'Invalid token type'}), 401
 
@@ -839,7 +833,7 @@ def update_result(result_id):
             return jsonify({'success': False, 'message': 'Token is missing'}), 401
 
         # Decode token to get instructor info
-        data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
         if data.get('type') != 'instructor':
             return jsonify({'success': False, 'message': 'Invalid token type'}), 401
 
@@ -887,7 +881,7 @@ def delete_result(result_id):
             return jsonify({'success': False, 'message': 'Token is missing'}), 401
 
         # Decode token to get instructor info
-        data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
         if data.get('type') != 'instructor':
             return jsonify({'success': False, 'message': 'Invalid token type'}), 401
 
@@ -1133,6 +1127,208 @@ def chat_page():
     other_user = request.args.get('user', '')
     return render_template('chat.html', other_user=other_user)
 
+# Route for managing future tests
+@app.route('/instructor/manage_future_tests')
+@token_required(allowed_types=("instructor",))
+def manage_future_tests():
+    return render_template('manage_future_tests.html')
+
+# API endpoint for getting instructor's future tests
+@app.route('/api/instructor/future-tests')
+@token_required(allowed_types=("instructor",))
+def get_instructor_future_tests():
+    try:
+        # Get instructor info from the token (already validated by decorator)
+        username = request.user['user']
+        instructor = get_instructor_by_username(username)
+        if not instructor:
+            return jsonify({'success': False, 'message': 'Instructor not found'}), 404
+
+        tests = get_future_tests_by_instructor(instructor['id'])
+        return jsonify({'success': True, 'tests': tests})
+    except jwt.ExpiredSignatureError:
+        return jsonify({'success': False, 'message': 'Token has expired'}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({'success': False, 'message': 'Invalid token'}), 401
+    except Exception as e:
+        logger.error(f"Error getting instructor's future tests: {str(e)}")
+        return jsonify({'success': False, 'message': 'An error occurred while fetching tests'}), 500
+
+# API endpoint for adding a future test
+@app.route('/api/instructor/future-tests', methods=['POST'])
+@token_required(allowed_types=("instructor",))
+def add_future_test_api():
+    try:
+        # Get instructor info from the token (already validated by decorator)
+        username = request.user['user']
+        instructor = get_instructor_by_username(username)
+        if not instructor:
+            return jsonify({'success': False, 'message': 'Instructor not found'}), 404
+
+        test_data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['subject', 'test_date', 'test_time', 'duration']
+        for field in required_fields:
+            if field not in test_data or not test_data[field]:
+                return jsonify({'success': False, 'message': f'Missing required field: {field}'}), 400
+
+        # Add test to database
+        if add_future_test(
+            test_data['subject'],
+            test_data['test_date'],
+            test_data['test_time'],
+            test_data['duration'],
+            test_data.get('location', ''),
+            test_data.get('test_type', ''),
+            test_data.get('description', ''),
+            instructor['id']
+        ):
+            return jsonify({'success': True, 'message': 'Test added successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to add test'}), 500
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({'success': False, 'message': 'Token has expired'}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({'success': False, 'message': 'Invalid token'}), 401
+    except Exception as e:
+        logger.error(f"Error adding future test: {str(e)}")
+        return jsonify({'success': False, 'message': 'An error occurred while adding the test'}), 500
+
+# API endpoint for updating a future test
+@app.route('/api/instructor/future-tests/<int:test_id>', methods=['PUT'])
+@token_required(allowed_types=("instructor",))
+def update_future_test_api(test_id):
+    try:
+        test_data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['subject', 'test_date', 'test_time', 'duration']
+        for field in required_fields:
+            if field not in test_data or not test_data[field]:
+                return jsonify({'success': False, 'message': f'Missing required field: {field}'}), 400
+
+        # Update test in database
+        if update_future_test(
+            test_id,
+            test_data['subject'],
+            test_data['test_date'],
+            test_data['test_time'],
+            test_data['duration'],
+            test_data.get('location', ''),
+            test_data.get('test_type', ''),
+            test_data.get('description', '')
+        ):
+            return jsonify({'success': True, 'message': 'Test updated successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to update test or test not found'}), 404
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({'success': False, 'message': 'Token has expired'}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({'success': False, 'message': 'Invalid token'}), 401
+    except Exception as e:
+        logger.error(f"Error updating future test: {str(e)}")
+        return jsonify({'success': False, 'message': 'An error occurred while updating the test'}), 500
+
+# API endpoint for deleting a future test
+@app.route('/api/instructor/future-tests/<int:test_id>', methods=['DELETE'])
+@token_required(allowed_types=("instructor",))
+def delete_future_test_api(test_id):
+    try:
+        # Delete test from database
+        if delete_future_test(test_id):
+            return jsonify({'success': True, 'message': 'Test deleted successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to delete test or test not found'}), 404
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({'success': False, 'message': 'Token has expired'}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({'success': False, 'message': 'Invalid token'}), 401
+    except Exception as e:
+        logger.error(f"Error deleting future test: {str(e)}")
+        return jsonify({'success': False, 'message': 'An error occurred while deleting the test'}), 500
+
+# Route for student evaluation page
+@app.route('/student/evaluation')
+@token_required(allowed_types=("student",))
+def student_evaluation():
+    return render_template('student_evaluation.html')
+
+# Route for instructor evaluations page
+@app.route('/instructor/evaluations')
+@token_required(allowed_types=("instructor",))
+def instructor_evaluations():
+    return render_template('instructor_evaluations.html')
+
+# API endpoint for getting all instructors (for student evaluation)
+@app.route('/api/instructors')
+@token_required(allowed_types=("student",))
+def get_instructors_api():
+    try:
+        instructors = get_all_instructors()
+        return jsonify({'success': True, 'instructors': instructors})
+    except Exception as e:
+        logger.error(f"Error getting instructors: {str(e)}")
+        return jsonify({'success': False, 'message': 'An error occurred while fetching instructors'}), 500
+
+# API endpoint for submitting evaluation
+@app.route('/api/evaluation', methods=['POST'])
+@token_required(allowed_types=("student",))
+def submit_evaluation():
+    try:
+        # Get student info from token
+        username = request.user['user']
+        student = get_student_by_username(username)
+        if not student:
+            return jsonify({'success': False, 'message': 'Student not found'}), 404
+
+        evaluation_data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['instructor_id', 'subject', 'teaching_quality', 'course_content', 'communication', 'overall_rating']
+        for field in required_fields:
+            if field not in evaluation_data:
+                return jsonify({'success': False, 'message': f'Missing required field: {field}'}), 400
+
+        # Add evaluation to database
+        if add_evaluation(
+            student['id'],
+            evaluation_data['instructor_id'],
+            evaluation_data['subject'],
+            evaluation_data['teaching_quality'],
+            evaluation_data['course_content'],
+            evaluation_data['communication'],
+            evaluation_data['overall_rating'],
+            evaluation_data.get('comments', '')
+        ):
+            return jsonify({'success': True, 'message': 'Evaluation submitted successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to submit evaluation'}), 500
+
+    except Exception as e:
+        logger.error(f"Error submitting evaluation: {str(e)}")
+        return jsonify({'success': False, 'message': 'An error occurred while submitting evaluation'}), 500
+
+# API endpoint for getting instructor's evaluations
+@app.route('/api/instructor/evaluations')
+@token_required(allowed_types=("instructor",))
+def get_evaluations_api():
+    try:
+        # Get instructor info from token
+        username = request.user['user']
+        instructor = get_instructor_by_username(username)
+        if not instructor:
+            return jsonify({'success': False, 'message': 'Instructor not found'}), 404
+
+        evaluations = get_instructor_evaluations(instructor['id'])
+        return jsonify({'success': True, 'evaluations': evaluations})
+    except Exception as e:
+        logger.error(f"Error getting evaluations: {str(e)}")
+        return jsonify({'success': False, 'message': 'An error occurred while fetching evaluations'}), 500
+
 # Run the Flask application
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(debug=True)

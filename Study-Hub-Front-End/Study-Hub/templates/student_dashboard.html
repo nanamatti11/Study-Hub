@@ -109,6 +109,15 @@
             color: white;
         }
 
+        .dashboard-btn.evaluation-btn {
+            background: linear-gradient(135deg, #9f7aea, #805ad5);
+            color: white;
+        }
+
+        .dashboard-btn.evaluation-btn i {
+            color: white;
+        }
+
         @media (max-width: 768px) {
             .dashboard-buttons {
                 grid-template-columns: 1fr;
@@ -143,9 +152,9 @@
                 <i class="fas fa-book-reader"></i>
                 LEARNING RESOURCES
             </button>
-            <button class="dashboard-btn chat-btn" onclick="window.location.href='/chat?user=instructor1'">
-                <i class="fas fa-comments"></i>
-                CHAT WITH INSTRUCTOR
+            <button class="dashboard-btn evaluation-btn" onclick="window.location.href='/student/evaluation'">
+                <i class="fas fa-star"></i>
+                EVALUATION
             </button>
         </div>
     </div>
