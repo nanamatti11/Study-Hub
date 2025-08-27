@@ -1329,6 +1329,88 @@ def get_evaluations_api():
         logger.error(f"Error getting evaluations: {str(e)}")
         return jsonify({'success': False, 'message': 'An error occurred while fetching evaluations'}), 500
 
+
+MATH_API_URL = "https://api.mathjs.org/v4/"
+WOLFRAM_API_URL = "https://api.wolframalpha.com/v1/result"
+
+# Sample math topics and resources for students
+MATH_TOPICS = {
+    "algebra": {
+        "title": "Algebra",
+        "description": "Learn about equations, inequalities, and functions",
+        "topics": [
+            {"name": "Linear Equations", "formula": "ax + b = c", "example": "2x + 3 = 7"},
+            {"name": "Quadratic Equations", "formula": "ax² + bx + c = 0", "example": "x² - 5x + 6 = 0"},
+            {"name": "Systems of Equations", "formula": "Multiple equations with multiple variables", "example": "2x + y = 5, x - y = 1"}
+        ]
+    },
+    "geometry": {
+        "title": "Geometry",
+        "description": "Study shapes, sizes, and spatial relationships",
+        "topics": [
+            {"name": "Area of Circle", "formula": "A = πr²", "example": "r = 5, A = 25π"},
+            {"name": "Pythagorean Theorem", "formula": "a² + b² = c²", "example": "3² + 4² = 5²"},
+            {"name": "Volume of Sphere", "formula": "V = (4/3)πr³", "example": "r = 3, V = 36π"}
+        ]
+    },
+    "calculus": {
+        "title": "Calculus",
+        "description": "Explore limits, derivatives, and integrals",
+        "topics": [
+            {"name": "Derivative", "formula": "f'(x) = lim(h→0) [f(x+h) - f(x)]/h", "example": "d/dx(x²) = 2x"},
+            {"name": "Integral", "formula": "∫f(x)dx", "example": "∫x dx = x²/2 + C"},
+            {"name": "Chain Rule", "formula": "d/dx[f(g(x))] = f'(g(x))·g'(x)", "example": "d/dx(sin(x²)) = 2x·cos(x²)"}
+        ]
+    },
+    "statistics": {
+        "title": "Statistics",
+        "description": "Learn about data analysis and probability",
+        "topics": [
+            {"name": "Mean", "formula": "μ = Σx/n", "example": "Mean of [1,2,3,4,5] = 3"},
+            {"name": "Standard Deviation", "formula": "σ = √(Σ(x-μ)²/n)", "example": "SD of [1,2,3,4,5] ≈ 1.58"},
+            {"name": "Probability", "formula": "P(A) = favorable/total", "example": "P(rolling 6) = 1/6"}
+        ]
+    }
+}
+
+@app.route("/math")
+def math():
+    return render_template("math.html")
+
+@app.route("/api/math-topics")
+def get_math_topics():
+    return jsonify(MATH_TOPICS)
+
+@app.route("/api/calculate", methods=["POST"])
+def calculate():
+    try:
+        data = request.get_json()
+        expression = data.get('expression', '')
+        
+        # Use MathJax API for calculations
+        response = requests.post(MATH_API_URL, json={
+            "expr": expression,
+            "precision": 14
+        })
+        
+        if response.status_code == 200:
+            result = response.json()
+            return jsonify({"result": result.get('result', 'Error in calculation')})
+        else:
+            return jsonify({"error": "Calculation failed"}), 400
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/topic/<topic_name>")
+def get_topic_details(topic_name):
+    if topic_name in MATH_TOPICS:
+        return jsonify(MATH_TOPICS[topic_name])
+    else:
+        return jsonify({"error": "Topic not found"}), 404
+
+#math  stuff ends here
+
 # Run the Flask application
 if __name__ == '__main__':
     app.run(debug=True)
