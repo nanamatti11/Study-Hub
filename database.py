@@ -1,13 +1,9 @@
 # Import required modules
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
-import os
 
 # Initialize the database and create required tables
 def init_db():
-    # Only create database if it doesn't exist
-    db_exists = os.path.exists('study_hub.db')
-        
     conn = sqlite3.connect('study_hub.db')
     cursor = conn.cursor()
 
@@ -52,6 +48,17 @@ def init_db():
     )
     ''')
 
+    # Create messages table for chat functionality
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sender TEXT NOT NULL,
+        receiver TEXT NOT NULL,
+        message TEXT NOT NULL,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
     # Create future_tests table to store upcoming tests
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS future_tests (
@@ -88,43 +95,86 @@ def init_db():
     )
     ''')
 
-    # Only add test data if database is newly created
-    if not db_exists:
-        # Test users data
-        test_students = [
-            ('john.doe', 'John Doe', 'john.doe@example.com', 'Student@123'),
-            ('emma.smith', 'Emma Smith', 'emma.smith@example.com', 'Emma@456'),
-            ('michael.brown', 'Michael Brown', 'michael.brown@example.com', 'Mike@789'),
-            ('sarah.wilson', 'Sarah Wilson', 'sarah.wilson@example.com', 'Sarah@321')
-        ]
+    # Add test users if they don't exist
+    test_student = ('student1', 'password123', 'Test Student', 'student1@example.com')
+    test_instructor = ('instructor1', 'password123', 'Test Instructor', 'instructor1@example.com', 'Mathematics')
 
-        test_instructors = [
-            ('prof.johnson', 'Professor Johnson', 'prof.johnson@example.com', 'Prof@123', 'Mathematics'),
-            ('dr.smith', 'Dr. Smith', 'dr.smith@example.com', 'Dr@456', 'Physics'),
-            ('ms.davis', 'Ms. Davis', 'ms.davis@example.com', 'Ms@789', 'Computer Science'),
-            ('mr.wilson', 'Mr. Wilson', 'mr.wilson@example.com', 'Mr@321', 'English')
-        ]
+    # Check if test student exists and add if not
+    cursor.execute('SELECT username FROM students WHERE username = ?', (test_student[0],))
+    if not cursor.fetchone():
+        hashed_password = generate_password_hash(test_student[1])
+        cursor.execute('INSERT INTO students (username, password, fullname, email) VALUES (?, ?, ?, ?)',
+                      (test_student[0], hashed_password, test_student[2], test_student[3]))
 
-        # Add test students
-        for username, fullname, email, password in test_students:
-            hashed_password = generate_password_hash(password)
-            cursor.execute('''
-                INSERT INTO students (username, fullname, email, password) 
-                VALUES (?, ?, ?, ?)
-            ''', (username, fullname, email, hashed_password))
-
-        # Add test instructors
-        for username, fullname, email, password, subject in test_instructors:
-            hashed_password = generate_password_hash(password)
-            cursor.execute('''
-                INSERT INTO instructors (username, fullname, email, password, subject) 
-                VALUES (?, ?, ?, ?, ?)
-            ''', (username, fullname, email, hashed_password, subject))
+    # Check if test instructor exists and add if not
+    cursor.execute('SELECT username FROM instructors WHERE username = ?', (test_instructor[0],))
+    if not cursor.fetchone():
+        hashed_password = generate_password_hash(test_instructor[1])
+        cursor.execute('INSERT INTO instructors (username, password, fullname, email, subject) VALUES (?, ?, ?, ?, ?)',
+                      (test_instructor[0], hashed_password, test_instructor[2], test_instructor[3], test_instructor[4]))
 
     conn.commit()
     conn.close()
-    
-    print("Database initialized successfully!") 
+
+# Add a new student to the database
+def add_student(username, password, fullname=None, email=None):
+    if not all([username, password, fullname, email]):
+        return False
+        
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    try:
+        # Check if username or email already exists
+        cursor.execute('SELECT username, email FROM students WHERE username = ? OR email = ?', 
+                      (username, email))
+        if cursor.fetchone():
+            return False
+
+        # Hash password and insert new student
+        hashed_password = generate_password_hash(password)
+        cursor.execute('''
+            INSERT INTO students (username, fullname, email, password) 
+            VALUES (?, ?, ?, ?)
+        ''', (username, fullname, email, hashed_password))
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+    except Exception as e:
+        print(f"Error adding student: {str(e)}")
+        return False
+    finally:
+        conn.close()
+
+# Add a new instructor to the database
+def add_instructor(username, password, fullname=None, email=None, subject=None):
+    if not all([username, password, fullname, email, subject]):
+        return False
+        
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    try:
+        # Check if username or email already exists
+        cursor.execute('SELECT username, email FROM instructors WHERE username = ? OR email = ?', 
+                      (username, email))
+        if cursor.fetchone():
+            return False
+
+        # Hash password and insert new instructor
+        hashed_password = generate_password_hash(password)
+        cursor.execute('''
+            INSERT INTO instructors (username, fullname, email, password, subject) 
+            VALUES (?, ?, ?, ?, ?)
+        ''', (username, fullname, email, hashed_password, subject))
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+    except Exception as e:
+        print(f"Error adding instructor: {str(e)}")
+        return False
+    finally:
+        conn.close()
 
 # Verify student login credentials
 def verify_student(username, password):
@@ -170,33 +220,17 @@ def verify_instructor(username, password):
     conn = sqlite3.connect('study_hub.db')
     cursor = conn.cursor()
     try:
-        print(f"Attempting to verify instructor: {username}")
-        
         # First try to find by username
-        cursor.execute('SELECT password, username, email FROM instructors WHERE username = ?', (username,))
+        cursor.execute('SELECT password FROM instructors WHERE username = ?', (username,))
         result = cursor.fetchone()
         
         # If not found by username, try by email
         if not result:
-            print(f"User not found by username, trying email: {username}")
-            cursor.execute('SELECT password, username, email FROM instructors WHERE email = ?', (username,))
+            cursor.execute('SELECT password FROM instructors WHERE email = ?', (username,))
             result = cursor.fetchone()
         
         if result:
-            stored_password = result[0]
-            found_username = result[1]
-            found_email = result[2]
-            print(f"Found instructor: {found_username} ({found_email})")
-            
-            # Verify password hash
-            if check_password_hash(stored_password, password):
-                print("Password verified successfully")
-                return True
-            else:
-                print("Password verification failed")
-                return False
-                
-        print(f"No instructor found with username/email: {username}")
+            return check_password_hash(result[0], password)
         return False
     except Exception as e:
         print(f"Error verifying instructor: {str(e)}")
@@ -204,64 +238,24 @@ def verify_instructor(username, password):
     finally:
         conn.close()
 
-# Add a new student to the database
-def add_student(username, password, fullname, email):
-    conn = sqlite3.connect('study_hub.db')
-    cursor = conn.cursor()
-    try:
-        hashed_password = generate_password_hash(password)
-        cursor.execute('''
-            INSERT INTO students (username, password, fullname, email) 
-            VALUES (?, ?, ?, ?)
-        ''', (username, hashed_password, fullname, email))
-        conn.commit()
-        return True
-    except sqlite3.IntegrityError:
-        return False
-    except Exception as e:
-        print(f"Error adding student: {str(e)}")
-        return False
-    finally:
-        conn.close()
-
-# Add a new instructor to the database
-def add_instructor(username, password, fullname, email, subject):
-    conn = sqlite3.connect('study_hub.db')
-    cursor = conn.cursor()
-    try:
-        hashed_password = generate_password_hash(password)
-        cursor.execute('''
-            INSERT INTO instructors (username, password, fullname, email, subject) 
-            VALUES (?, ?, ?, ?, ?)
-        ''', (username, hashed_password, fullname, email, subject))
-        conn.commit()
-        return True
-    except sqlite3.IntegrityError:
-        return False
-    except Exception as e:
-        print(f"Error adding instructor: {str(e)}")
-        return False
-    finally:
-        conn.close()
-
-# Search for students by username or ID
+# Search for students by username, full name (exact match), or ID
 def search_students(search_term):
     conn = sqlite3.connect('study_hub.db')
     cursor = conn.cursor()
     try:
+        # Search by username, full name (exact match), or ID
         cursor.execute('''
-            SELECT id, username, fullname, email FROM students 
-            WHERE username LIKE ? OR fullname LIKE ? OR id LIKE ?
-        ''', (f'%{search_term}%', f'%{search_term}%', f'%{search_term}%'))
+            SELECT id, username, fullname, email
+            FROM students
+            WHERE username LIKE ? OR id LIKE ? OR fullname = ?
+        ''', (f'%{search_term}%', f'%{search_term}%', search_term))
+        
         results = cursor.fetchall()
         return [{'id': row[0], 'username': row[1], 'fullname': row[2], 'email': row[3]} for row in results]
-    except Exception as e:
-        print(f"Error searching students: {str(e)}")
-        return []
     finally:
         conn.close()
 
-# Add a result for a student
+# Add a new result for a student
 def add_result(student_id, subject, marks, grade, credits, semester, academic_year):
     conn = sqlite3.connect('study_hub.db')
     cursor = conn.cursor()
@@ -278,53 +272,48 @@ def add_result(student_id, subject, marks, grade, credits, semester, academic_ye
     finally:
         conn.close()
 
-# Get student by username
+# Get student information by username
 def get_student_by_username(username):
     conn = sqlite3.connect('study_hub.db')
     cursor = conn.cursor()
     try:
-        cursor.execute('SELECT id, username, fullname, email FROM students WHERE username = ? OR email = ?', (username, username))
+        cursor.execute('SELECT id, username FROM students WHERE username = ?', (username,))
         result = cursor.fetchone()
+        if not result:
+            cursor.execute('SELECT id, username FROM students WHERE email = ?', (username,))
+            result = cursor.fetchone()
         if result:
-            return {'id': result[0], 'username': result[1], 'fullname': result[2], 'email': result[3]}
-        return None
-    except Exception as e:
-        print(f"Error getting student: {str(e)}")
+            return {'id': result[0], 'username': result[1]}
         return None
     finally:
         conn.close()
 
-# Get student results
+# Get student results for a specific year and semester
 def get_student_results(student_id, year, semester):
     conn = sqlite3.connect('study_hub.db')
     cursor = conn.cursor()
     try:
         cursor.execute('''
-            SELECT subject, marks, grade, credits FROM results 
+            SELECT subject, marks, grade, credits
+            FROM results
             WHERE student_id = ? AND academic_year = ? AND semester = ?
+            ORDER BY subject
         ''', (student_id, year, semester))
+        
         results = cursor.fetchall()
-        return [{'subject': row[0], 'marks': row[1], 'grade': row[2], 'credits': row[3]} for row in results]
-    except Exception as e:
-        print(f"Error getting student results: {str(e)}")
-        return []
+        return [{
+            'subject': row[0],
+            'marks': row[1],
+            'grade': row[2],
+            'credits': row[3]
+        } for row in results]
     finally:
         conn.close()
 
-# Send a message between users
 def send_message(sender, receiver, message):
     conn = sqlite3.connect('study_hub.db')
     cursor = conn.cursor()
     try:
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS messages (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                sender TEXT NOT NULL,
-                receiver TEXT NOT NULL,
-                message TEXT NOT NULL,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
         cursor.execute('''
             INSERT INTO messages (sender, receiver, message) VALUES (?, ?, ?)
         ''', (sender, receiver, message))
@@ -336,23 +325,31 @@ def send_message(sender, receiver, message):
     finally:
         conn.close()
 
-# Get chat history between two users
-def get_chat_history(user1, user2):
+def get_chat_history(user1, user2, limit=100):
     conn = sqlite3.connect('study_hub.db')
     cursor = conn.cursor()
     try:
         cursor.execute('''
-            SELECT sender, receiver, message, timestamp FROM messages 
+            SELECT sender, receiver, message, timestamp FROM messages
             WHERE (sender = ? AND receiver = ?) OR (sender = ? AND receiver = ?)
             ORDER BY timestamp ASC
-        ''', (user1, user2, user2, user1))
-        results = cursor.fetchall()
-        return [{'sender': row[0], 'receiver': row[1], 'message': row[2], 'timestamp': row[3]} for row in results]
+            LIMIT ?
+        ''', (user1, user2, user2, user1, limit))
+        messages = cursor.fetchall()
+        return [
+            {
+                'sender': row[0],
+                'receiver': row[1],
+                'message': row[2],
+                'timestamp': row[3]
+            } for row in messages
+        ]
     except Exception as e:
-        print(f"Error getting chat history: {str(e)}")
+        print(f"Error fetching chat history: {str(e)}")
         return []
     finally:
         conn.close()
+
 
 # Get instructor by username
 def get_instructor_by_username(username):
@@ -522,3 +519,6 @@ def get_all_instructors():
         return []
     finally:
         conn.close()
+
+# Initialize the database when this module is imported
+init_db()

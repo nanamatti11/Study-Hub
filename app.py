@@ -30,8 +30,12 @@ from database import (
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Initialize Flask application
-app = Flask(__name__)
+# Initialize Flask application (explicit folders after restructure)
+app = Flask(
+    __name__,
+    template_folder=os.path.join(os.path.dirname(__file__), 'templates'),
+    static_folder=os.path.join(os.path.dirname(__file__), 'static')
+)
 # Use a fixed secret key for session and JWT security
 app.config['SECRET_KEY'] = 'your-secret-key-here'  # Replace with a secure key in production
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///study_hub.db'
@@ -521,11 +525,14 @@ def instructor_register():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
+    fullname = data.get('fullname', username)  # Default to username if not provided
+    email = data.get('email', f"{username}@example.com")  # Default email if not provided
+    subject = data.get('subject', 'General')  # Default subject if not provided
 
     if not username or not password:
         return jsonify({'success': False, 'message': 'Username and password are required'})
 
-    if add_instructor(username, password):
+    if add_instructor(username, password, fullname, email, subject):
         return jsonify({'success': True, 'message': 'Instructor registered successfully'})
     else:
         return jsonify({'success': False, 'message': 'Username already exists'})
