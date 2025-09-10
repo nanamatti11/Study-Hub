@@ -238,17 +238,17 @@ def verify_instructor(username, password):
     finally:
         conn.close()
 
-# Search for students by username, full name (exact match), or ID
+# Search for students by username, full name (partial match), or ID
 def search_students(search_term):
     conn = sqlite3.connect('study_hub.db')
     cursor = conn.cursor()
     try:
-        # Search by username, full name (exact match), or ID
+        # Search by username, full name (partial match), or ID
         cursor.execute('''
             SELECT id, username, fullname, email
             FROM students
-            WHERE username LIKE ? OR id LIKE ? OR fullname = ?
-        ''', (f'%{search_term}%', f'%{search_term}%', search_term))
+            WHERE username LIKE ? OR id LIKE ? OR fullname LIKE ?
+        ''', (f'%{search_term}%', f'%{search_term}%', f'%{search_term}%'))
         
         results = cursor.fetchall()
         return [{'id': row[0], 'username': row[1], 'fullname': row[2], 'email': row[3]} for row in results]

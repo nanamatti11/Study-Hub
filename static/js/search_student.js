@@ -79,17 +79,25 @@ document.addEventListener('DOMContentLoaded', function() {
         const studentName = document.getElementById('studentName');
         const studentId = document.getElementById('studentId');
         const studentEmail = document.getElementById('studentEmail');
-        const courseResults = document.getElementById('courseResults');
+        const semester1Results = document.getElementById('semester1Results');
+        const semester2Results = document.getElementById('semester2Results');
+        const semester1Section = document.getElementById('semester1Section');
+        const semester2Section = document.getElementById('semester2Section');
+        const noResultsMessage = document.getElementById('noResultsMessage');
 
         // Display the first student's information
         if (students.length > 0) {
             const student = students[0];
-            studentName.textContent = student.username;
+            studentName.textContent = student.fullname || student.username;
             studentId.textContent = `ID: ${student.id}`;
             studentEmail.textContent = student.email || `${student.username}@example.com`;
 
-            // Clear previous results
-            courseResults.innerHTML = '';
+            // Clear previous results and hide sections
+            semester1Results.innerHTML = '';
+            semester2Results.innerHTML = '';
+            semester1Section.style.display = 'none';
+            semester2Section.style.display = 'none';
+            noResultsMessage.style.display = 'none';
 
             // Fetch and display real course results for this student
             fetch(`/api/results/filter?student=${student.id}` , {
@@ -98,28 +106,46 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.results.length > 0) {
-                    courseResults.innerHTML = data.results.map(result => `
-                        <tr>
-                            <td>${result.subject}</td>
-                            <td>${result.credits}</td>
-                            <td>${result.grade}</td>
-                            <td>${result.marks}</td>
-                        </tr>
-                    `).join('');
+                    // Group results by semester
+                    const semester1Data = data.results.filter(result => result.semester == 1);
+                    const semester2Data = data.results.filter(result => result.semester == 2);
+
+                    // Display Semester 1 results
+                    if (semester1Data.length > 0) {
+                        semester1Results.innerHTML = semester1Data.map(result => `
+                            <tr>
+                                <td>${result.subject}</td>
+                                <td>${result.credits}</td>
+                                <td>${result.grade}</td>
+                                <td>${result.marks}</td>
+                            </tr>
+                        `).join('');
+                        semester1Section.style.display = 'block';
+                    }
+
+                    // Display Semester 2 results
+                    if (semester2Data.length > 0) {
+                        semester2Results.innerHTML = semester2Data.map(result => `
+                            <tr>
+                                <td>${result.subject}</td>
+                                <td>${result.credits}</td>
+                                <td>${result.grade}</td>
+                                <td>${result.marks}</td>
+                            </tr>
+                        `).join('');
+                        semester2Section.style.display = 'block';
+                    }
+
+                    // Show no results message if no data for any semester
+                    if (semester1Data.length === 0 && semester2Data.length === 0) {
+                        noResultsMessage.style.display = 'block';
+                    }
                 } else {
-                    courseResults.innerHTML = `
-                        <tr>
-                            <td colspan="4" class="no-results">No course results available yet</td>
-                        </tr>
-                    `;
+                    noResultsMessage.style.display = 'block';
                 }
             })
             .catch(() => {
-                courseResults.innerHTML = `
-                    <tr>
-                        <td colspan="4" class="no-results">Failed to load course results</td>
-                    </tr>
-                `;
+                noResultsMessage.style.display = 'block';
             });
 
             resultsContainer.style.display = 'block';

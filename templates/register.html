@@ -38,6 +38,10 @@
                 <input placeholder="Enter your password" id="password" class="form_style" type="password" name="password" required>
             </div>
             <div class="form_group">
+                <label class="sub_title" for="confirm_password">Confirm Password</label>
+                <input placeholder="Confirm your password" id="confirm_password" class="form_style" type="password" name="confirm_password" required>
+            </div>
+            <div class="form_group">
                 <label class="sub_title" for="user_type">Register as</label>
                 <select id="user_type" name="user_type" class="form_style" required onchange="document.getElementById('subject_group').style.display = this.value === 'instructor' ? 'block' : 'none';">
                     <option value="">Select user type</option>
@@ -56,5 +60,43 @@
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordField = document.getElementById('password');
+    const confirmPasswordField = document.getElementById('confirm_password');
+    const form = document.querySelector('form');
+    
+    // Function to validate password match
+    function validatePasswordMatch() {
+        const password = passwordField.value;
+        const confirmPassword = confirmPasswordField.value;
+        
+        if (confirmPassword && password !== confirmPassword) {
+            confirmPasswordField.setCustomValidity('Passwords do not match');
+            confirmPasswordField.style.borderColor = '#e53e3e';
+            return false;
+        } else {
+            confirmPasswordField.setCustomValidity('');
+            confirmPasswordField.style.borderColor = '';
+            return true;
+        }
+    }
+    
+    // Add event listeners
+    confirmPasswordField.addEventListener('input', validatePasswordMatch);
+    passwordField.addEventListener('input', validatePasswordMatch);
+    
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        if (!validatePasswordMatch()) {
+            e.preventDefault();
+            alert('Passwords do not match. Please check your password confirmation.');
+            return false;
+        }
+    });
+});
+</script>
+
 </body>
 </html>

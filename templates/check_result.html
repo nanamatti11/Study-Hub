@@ -9,25 +9,52 @@
     <style>
         .container {
             min-height: 100vh;
-            background: linear-gradient(135deg, #f6f9fc 0%, #ecf0f5 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
             display: flex;
             flex-direction: column;
         }
 
         .header {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             margin-bottom: 30px;
             text-align: center;
         }
 
+        .header h1 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
         .student-info {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
             margin: 20px 0;
-            text-align: center;
-            color: #4a5568;
+            box-shadow: 0 8px 25px rgba(240, 147, 251, 0.3);
+        }
+
+        .student-info h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+
+        .student-info p {
+            margin: 0;
+            font-size: 1.2em;
+            opacity: 0.9;
         }
 
         .content {
@@ -39,100 +66,122 @@
         }
 
         .selection-form {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
             text-align: center;
         }
 
+        .selection-form h2 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2em;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            text-align: left;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             color: #4a5568;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 1.1em;
         }
 
         .form-group select {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 1em;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1.1em;
             color: #2d3748;
-            background-color: #f8fafc;
-            transition: border-color 0.3s;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .form-group select:focus {
             outline: none;
-            border-color: #4299e1;
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
         }
 
         .btn {
-            padding: 10px 20px;
+            padding: 15px 30px;
             border: none;
-            border-radius: 6px;
+            border-radius: 12px;
             cursor: pointer;
-            transition: all 0.3s;
-            font-size: 1em;
+            transition: all 0.3s ease;
+            font-size: 1.1em;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            font-weight: 600;
         }
 
         .btn-view {
-            background: linear-gradient(135deg, #4299e1, #3182ce);
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             width: 100%;
             justify-content: center;
-            padding: 12px 30px;
-            font-size: 1.1em;
+            padding: 18px 30px;
+            font-size: 1.2em;
             margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
         .btn-view:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
 
         .btn-back {
             position: fixed;
             top: 20px;
             left: 20px;
-            padding: 10px 20px;
-            background: #718096;
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 0;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
         .btn-back:hover {
-            background: #4a5568;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
         }
 
         .results-container {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             padding: 40px;
-            border-radius: 18px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             width: 100%;
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 0 auto;
-            font-size: 1.22rem;
-            text-align: center;
+            font-size: 1.1rem;
         }
 
         .results-header {
@@ -141,32 +190,106 @@
         }
 
         .results-header h2 {
-            color: #2d3748;
-            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.2em;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .results-header p {
+            color: #4a5568;
+            font-size: 1.2em;
+            font-weight: 500;
         }
 
         .results-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 1.18rem;
-        }
-
-        .results-table th,
-        .results-table td {
-            padding: 16px;
-            text-align: center;
-            border-bottom: 1px solid #e2e8f0;
+            margin-top: 30px;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .results-table th {
-            background-color: #f7fafc;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
             font-weight: 600;
-            color: #4a5568;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .results-table td {
+            padding: 18px 20px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 1em;
         }
 
         .results-table tr:hover {
-            background-color: #f8fafc;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        }
+
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #e2e8f0;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .btn-back {
+                position: relative;
+                top: auto;
+                left: auto;
+                margin-bottom: 20px;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .header, .selection-form, .results-container {
+                padding: 20px;
+            }
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -178,18 +301,18 @@
         </button>
 
         <div class="header">
-            <h1>Check Your Results</h1>
+            <h1><i class="fas fa-chart-bar"></i> Check Your Results</h1>
             <div class="student-info">
-                <h2 id="studentName"></h2>
-                <p id="studentId"></p>
+                <h2 id="studentName"><i class="fas fa-user"></i> Student Name</h2>
+                <p id="studentId"><i class="fas fa-id-card"></i> Student ID</p>
             </div>
         </div>
 
         <div class="content">
             <div id="selectionForm" class="selection-form">
-                <h2>Check Your Results</h2>
+                <h2><i class="fas fa-graduation-cap"></i> Select Academic Period</h2>
                 <div class="form-group">
-                    <label for="year">Academic Year</label>
+                    <label for="year"><i class="fas fa-calendar-alt"></i> Academic Year</label>
                     <select id="year" required>
                         <option value="">Select Year</option>
                         <option value="1">Year 1</option>
@@ -200,7 +323,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="semester">Semester</label>
+                    <label for="semester"><i class="fas fa-calendar"></i> Semester</label>
                     <select id="semester" required>
                         <option value="">Select Semester</option>
                         <option value="1">Semester 1</option>
@@ -208,9 +331,14 @@
                     </select>
                 </div>
 
-                <button onclick="viewResults()" class="btn btn-view">
-                    <i class="fas fa-search"></i> View Results
-                </button>
+                <div style="display: flex; gap: 15px; margin-top: 20px;">
+                    <button onclick="window.location.href='/student/dashboard'" class="btn" style="background: linear-gradient(135deg, #718096, #4a5568); color: white; flex: 1; padding: 15px 30px; border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; font-size: 1.1em; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </button>
+                    <button onclick="viewResults()" class="btn btn-view" style="flex: 1;">
+                        <i class="fas fa-search"></i> View Results
+                    </button>
+                </div>
             </div>
 
             <div id="resultsContainer" class="results-container" style="display: none;">
@@ -218,20 +346,20 @@
                     <i class="fas fa-arrow-left"></i> Back to Selection
                 </button>
                 <div class="results-header">
-                    <h2>Academic Results</h2>
+                    <h2><i class="fas fa-trophy"></i> Academic Results</h2>
                     <p id="resultYearSemester"></p>
                 </div>
                 <div class="student-info">
-                    <h3 id="resultStudentName"></h3>
-                    <p id="resultStudentId"></p>
+                    <h3 id="resultStudentName"><i class="fas fa-user"></i> Student Name</h3>
+                    <p id="resultStudentId"><i class="fas fa-id-card"></i> Student ID</p>
                 </div>
                 <table class="results-table">
                     <thead>
                         <tr>
-                            <th>Subject</th>
-                            <th>Marks</th>
-                            <th>Grade</th>
-                            <th>Credits</th>
+                            <th><i class="fas fa-book"></i> Subject</th>
+                            <th><i class="fas fa-chart-line"></i> Marks</th>
+                            <th><i class="fas fa-star"></i> Grade</th>
+                            <th><i class="fas fa-award"></i> Credits</th>
                         </tr>
                     </thead>
                     <tbody id="resultsTableBody">

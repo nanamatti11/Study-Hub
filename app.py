@@ -139,13 +139,20 @@ def register():
             username = request.form.get('username', '').strip()
             email = request.form.get('email', '').strip()
             password = request.form.get('password', '')
+            confirm_password = request.form.get('confirm_password', '')
             user_type = request.form.get('user_type', '').strip()
             subject = request.form.get('subject', '').strip() if user_type == 'instructor' else None
 
             # Validation checks
-            if not all([fullname, username, email, password, user_type]):
-                logger.error(f"Missing fields: fullname={fullname}, username={username}, email={email}, password={'***' if password else ''}, user_type={user_type}")
+            if not all([fullname, username, email, password, confirm_password, user_type]):
+                logger.error(f"Missing fields: fullname={fullname}, username={username}, email={email}, password={'***' if password else ''}, confirm_password={'***' if confirm_password else ''}, user_type={user_type}")
                 flash('All fields are required', 'error')
+                return redirect(url_for('register'))
+
+            # Check if passwords match
+            if password != confirm_password:
+                logger.error(f"Password mismatch for username={username}")
+                flash('Passwords do not match', 'error')
                 return redirect(url_for('register'))
 
             if user_type not in ['instructor', 'student']:
@@ -719,11 +726,11 @@ def get_all_results():
         conn = sqlite3.connect('study_hub.db')
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT r.id, s.username as student_name, r.subject, r.marks, r.grade, 
+            SELECT r.id, s.fullname as student_name, r.subject, r.marks, r.grade, 
                    r.credits, r.academic_year, r.semester
             FROM results r
             JOIN students s ON r.student_id = s.id
-            ORDER BY s.username, r.academic_year, r.semester, r.subject
+            ORDER BY s.fullname, r.academic_year, r.semester, r.subject
         ''')
         results = cursor.fetchall()
         conn.close()
@@ -775,7 +782,7 @@ def filter_results():
 
         # Build query
         query = '''
-            SELECT r.id, s.username as student_name, r.subject, r.marks, r.grade, 
+            SELECT r.id, s.fullname as student_name, r.subject, r.marks, r.grade, 
                    r.credits, r.academic_year, r.semester
             FROM results r
             JOIN students s ON r.student_id = s.id
@@ -784,8 +791,8 @@ def filter_results():
         params = []
 
         if student:
-            query += ' AND (s.username LIKE ? OR s.id LIKE ?)'
-            params.extend([f'%{student}%', f'%{student}%'])
+            query += ' AND (s.fullname LIKE ? OR s.username LIKE ? OR s.id LIKE ?)'
+            params.extend([f'%{student}%', f'%{student}%', f'%{student}%'])
         if subject:
             query += ' AND r.subject LIKE ?'
             params.append(f'%{subject}%')
@@ -796,7 +803,7 @@ def filter_results():
             query += ' AND r.semester = ?'
             params.append(semester)
 
-        query += ' ORDER BY s.username, r.academic_year, r.semester, r.subject'
+        query += ' ORDER BY s.fullname, r.academic_year, r.semester, r.subject'
 
         # Execute query
         conn = sqlite3.connect('study_hub.db')
