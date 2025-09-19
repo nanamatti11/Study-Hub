@@ -288,6 +288,64 @@ def get_student_by_username(username):
     finally:
         conn.close()
 
+# Helper: get student full name by username/email
+def get_student_fullname(username):
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute('SELECT fullname FROM students WHERE username = ? OR email = ?', (username, username))
+        row = cursor.fetchone()
+        return row[0] if row else None
+    finally:
+        conn.close()
+
+# Helper: get all results joined with students (used by instructor views)
+def get_all_results_joined():
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            SELECT r.id, s.fullname as student_name, r.subject, r.marks, r.grade,
+                   r.credits, r.academic_year, r.semester
+            FROM results r
+            JOIN students s ON r.student_id = s.id
+            ORDER BY s.fullname, r.academic_year, r.semester, r.subject
+        ''')
+        return cursor.fetchall()
+    finally:
+        conn.close()
+
+# Helper: filter results with optional params
+def filter_results_db(student:str, subject:str, year:str, semester:str):
+    conn = sqlite3.connect('study_hub.db')
+    cursor = conn.cursor()
+    try:
+        query = '''
+            SELECT r.id, s.fullname as student_name, r.subject, r.marks, r.grade,
+                   r.credits, r.academic_year, r.semester
+            FROM results r
+            JOIN students s ON r.student_id = s.id
+            WHERE 1=1
+        '''
+        params = []
+        if student:
+            query += ' AND (s.fullname LIKE ? OR s.username LIKE ? OR s.id LIKE ?)'
+            params.extend([f'%{student}%', f'%{student}%', f'%{student}%'])
+        if subject:
+            query += ' AND r.subject LIKE ?'
+            params.append(f'%{subject}%')
+        if year:
+            query += ' AND r.academic_year = ?'
+            params.append(year)
+        if semester:
+            query += ' AND r.semester = ?'
+            params.append(semester)
+        query += ' ORDER BY s.fullname, r.academic_year, r.semester, r.subject'
+        cursor.execute(query, params)
+        return cursor.fetchall()
+    finally:
+        conn.close()
+
 # Get student results for a specific year and semester
 def get_student_results(student_id, year, semester):
     conn = sqlite3.connect('study_hub.db')

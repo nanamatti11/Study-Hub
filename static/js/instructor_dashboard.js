@@ -19,9 +19,24 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
 
     // Set up logout button
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', logout);
+    const profileBtn = document.getElementById('profileBtn');
+    const dropdown = document.getElementById('profileDropdown');
+    const logoutDropdown = document.getElementById('logoutDropdown');
+    if (profileBtn && dropdown) {
+        profileBtn.addEventListener('click', () => {
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        });
+        document.addEventListener('click', (e) => {
+            if (!profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+    }
+    if (logoutDropdown) {
+        logoutDropdown.addEventListener('click', (e) => {
+            e.preventDefault();
+            logout();
+        });
     }
 
     // Set up feature buttons

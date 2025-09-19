@@ -13,9 +13,14 @@
             <h1>Instructor Dashboard</h1>
             <div class="user-info">
                 <span id="instructorName">Welcome, Instructor</span>
-                <button id="logoutBtn" class="btn-logout">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
+                <div class="profile-menu">
+                    <button id="profileBtn" class="btn-profile">
+                        <i class="fas fa-user-circle"></i>
+                    </button>
+                    <div id="profileDropdown" class="dropdown" style="display:none;">
+                        <a href="#" id="logoutDropdown">Logout</a>
+                    </div>
+                </div>
             </div>
         </header>
 

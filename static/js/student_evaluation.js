@@ -26,11 +26,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     function loadInstructors() {
-        const token = localStorage.getItem('studentToken');
-        
+        // The browser will automatically send cookies with the request
         fetch('/api/instructors', {
             headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             }
         })
@@ -118,12 +116,10 @@ document.addEventListener('DOMContentLoaded', function() {
             comments: document.getElementById('comments').value
         };
         
-        const token = localStorage.getItem('studentToken');
-        
+        // The browser will automatically send cookies with the request
         fetch('/api/evaluation', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(evaluationData)

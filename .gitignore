@@ -23,29 +23,101 @@ var/
 # Virtual Environment
 venv/
 ENV/
+env.bak/
+venv.bak/
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
 
 # Flask
 instance/
 .webassets-cache
+flask_session/
 
 # Database
 *.db
 *.sqlite3
+*.sqlite
 
 # Environment variables
 .env
 .env.local
+.env.production
+.env.staging
+.env.development
 
 # Logs
 *.log
+logs/
 
 # OS
 .DS_Store
-Thumbs.db 
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.coverage.*
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Temporary files
+*.tmp
+*.temp
+test_*.py
+*_test.py
+check_*.py
+
+# JavaScript/Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Static files cache
+static/resources/cache/
+static/resources/downloads/
+
+# Session files
+*.session
+
+# Backup files
+*.bak
+*.backup
+
+# Compiled files
+*.pyo
+*.pyd
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 .venv

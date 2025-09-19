@@ -38,10 +38,86 @@
             border-radius: 6px;
             cursor: pointer;
             transition: background 0.3s;
+            display: none;
         }
 
         .btn-logout:hover {
             background: #c53030;
+        }
+
+        .profile-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-picture {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 16px;
+        }
+
+        .profile-picture:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 8px 0;
+            min-width: 150px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            margin-top: 5px;
+        }
+
+        .profile-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 14px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dropdown-item:hover {
+            background: #f7fafc;
+        }
+
+        .dropdown-item.logout {
+            color: #e53e3e;
+        }
+
+        .dropdown-item.logout:hover {
+            background: #fed7d7;
         }
 
         .dashboard-buttons {
@@ -133,9 +209,21 @@
             <h1>Student Dashboard</h1>
             <div class="user-info">
                 <span id="username"></span>
-                <button onclick="logout()" class="btn-logout">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
+                <div class="profile-container">
+                    <div class="profile-picture" id="profilePicture" onclick="toggleProfileDropdown()">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <button class="dropdown-item" onclick="viewProfile()">
+                            <i class="fas fa-user-circle"></i>
+                            Profile
+                        </button>
+                        <button class="dropdown-item logout" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Logout
+                        </button>
+                    </div>
+                </div>
             </div>
         </header>
 

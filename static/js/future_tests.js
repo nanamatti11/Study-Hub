@@ -1,11 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if user is logged in
-    const token = localStorage.getItem('studentToken');
-    if (!token) {
-        window.location.href = '/';
-        return;
-    }
-
     // Load future tests from API
     loadFutureTests();
 
@@ -32,7 +25,6 @@ async function loadFutureTests() {
         if (!response.ok) {
             if (response.status === 401) {
                 // Token expired or invalid
-                localStorage.removeItem('studentToken');
                 window.location.href = '/';
                 return;
             }
