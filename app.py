@@ -15,8 +15,8 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import jwt
-import requests
-import gdown
+# import requests
+# import gdown
 
 from database import (
     add_student, add_instructor, verify_student, verify_instructor,
